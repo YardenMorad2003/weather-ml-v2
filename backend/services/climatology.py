@@ -15,9 +15,11 @@ cache); subsequent startups load from npz instantly.
 """
 from __future__ import annotations
 import sys
+import time
 from pathlib import Path
 
 import numpy as np
+import requests
 
 from ..core import weather_ml  # noqa: F401 - sys.path shim
 from cities import CITIES  # type: ignore
@@ -57,9 +59,31 @@ def build_all_profiles_multi_year(
         flush=True,
     )
     for i, c in enumerate(CITIES):
-        df = fetch_history_chunked(
-            c["lat"], c["lon"], year_start, year_end, freq="hourly"
-        )
+        # Open-Meteo's free tier throttles dynamically; surface 429 as a
+        # backoff+retry instead of letting the whole build die partway.
+        for attempt in range(6):
+            try:
+                df = fetch_history_chunked(
+                    c["lat"], c["lon"], year_start, year_end, freq="hourly"
+                )
+                break
+            except requests.HTTPError as e:
+                status = getattr(e.response, "status_code", None)
+                if status != 429:
+                    raise
+                wait = min(300, 30 * (2 ** attempt))
+                print(
+                    f"[climatology] 429 at {c['name']} (attempt {attempt + 1}), "
+                    f"sleeping {wait}s",
+                    file=sys.stderr,
+                    flush=True,
+                )
+                time.sleep(wait)
+        else:
+            raise RuntimeError(
+                f"[climatology] persistent 429 for {c['name']}; aborting"
+            )
+
         profiles[i] = make_city_profile(df).astype(np.float32)
         if (i + 1) % 10 == 0 or i + 1 == total:
             print(
@@ -67,6 +91,9 @@ def build_all_profiles_multi_year(
                 file=sys.stderr,
                 flush=True,
             )
+        # Light pacing so we don't re-trigger the throttle back-to-back on
+        # uncached runs. Cached chunks return instantly regardless.
+        time.sleep(0.25)
 
     np.savez(cache, profiles=profiles)
     return profiles

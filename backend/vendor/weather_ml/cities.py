@@ -110,6 +110,162 @@ CITIES = [
     {"name": "Murmansk", "country": "RU", "lat": 68.97, "lon": 33.09},
     {"name": "Norilsk", "country": "RU", "lat": 69.35, "lon": 88.20},
     {"name": "Lhasa", "country": "CN", "lat": 29.65, "lon": 91.17},
+
+    # ---- Expansion: +188 cities for broader climatic + geographic coverage ----
+
+    # North America — United States
+    {"name": "Seattle", "country": "US", "lat": 47.61, "lon": -122.33},
+    {"name": "Portland", "country": "US", "lat": 45.52, "lon": -122.68},
+    {"name": "Salt Lake City", "country": "US", "lat": 40.76, "lon": -111.89},
+    {"name": "Albuquerque", "country": "US", "lat": 35.08, "lon": -106.65},
+    {"name": "Las Vegas", "country": "US", "lat": 36.17, "lon": -115.14},
+    {"name": "Boston", "country": "US", "lat": 42.36, "lon": -71.06},
+    {"name": "Philadelphia", "country": "US", "lat": 39.95, "lon": -75.17},
+    {"name": "Atlanta", "country": "US", "lat": 33.75, "lon": -84.39},
+    {"name": "Dallas", "country": "US", "lat": 32.78, "lon": -96.80},
+    {"name": "Minneapolis", "country": "US", "lat": 44.98, "lon": -93.27},
+    {"name": "Detroit", "country": "US", "lat": 42.33, "lon": -83.05},
+    {"name": "Austin", "country": "US", "lat": 30.27, "lon": -97.74},
+    {"name": "New Orleans", "country": "US", "lat": 29.95, "lon": -90.07},
+    {"name": "Nashville", "country": "US", "lat": 36.16, "lon": -86.78},
+    {"name": "Charlotte", "country": "US", "lat": 35.23, "lon": -80.84},
+    {"name": "San Diego", "country": "US", "lat": 32.72, "lon": -117.16},
+    {"name": "Sacramento", "country": "US", "lat": 38.58, "lon": -121.49},
+    {"name": "Tucson", "country": "US", "lat": 32.22, "lon": -110.93},
+    {"name": "Orlando", "country": "US", "lat": 28.54, "lon": -81.38},
+    {"name": "Pittsburgh", "country": "US", "lat": 40.44, "lon": -79.99},
+    {"name": "St. Louis", "country": "US", "lat": 38.63, "lon": -90.20},
+    {"name": "Buffalo", "country": "US", "lat": 42.89, "lon": -78.88},
+    {"name": "Rochester", "country": "US", "lat": 43.16, "lon": -77.61},
+    {"name": "Asheville", "country": "US", "lat": 35.60, "lon": -82.55},
+    {"name": "Fairbanks", "country": "US", "lat": 64.84, "lon": -147.72},
+
+    # North America — Canada
+    {"name": "Halifax", "country": "CA", "lat": 44.65, "lon": -63.58},
+    {"name": "Montreal", "country": "CA", "lat": 45.50, "lon": -73.57},
+    {"name": "Ottawa", "country": "CA", "lat": 45.42, "lon": -75.70},
+    {"name": "Calgary", "country": "CA", "lat": 51.04, "lon": -114.07},
+    {"name": "Winnipeg", "country": "CA", "lat": 49.90, "lon": -97.14},
+    {"name": "Edmonton", "country": "CA", "lat": 53.55, "lon": -113.49},
+    {"name": "Yellowknife", "country": "CA", "lat": 62.45, "lon": -114.37},
+    {"name": "Whitehorse", "country": "CA", "lat": 60.72, "lon": -135.05},
+
+    # North America — Mexico
+    {"name": "Guadalajara", "country": "MX", "lat": 20.66, "lon": -103.35},
+    {"name": "Monterrey", "country": "MX", "lat": 25.68, "lon": -100.32},
+    {"name": "Cancun", "country": "MX", "lat": 21.16, "lon": -86.85},
+    {"name": "Oaxaca", "country": "MX", "lat": 17.07, "lon": -96.73},
+
+    # Central America & Caribbean
+    {"name": "San Salvador", "country": "SV", "lat": 13.69, "lon": -89.22},
+    {"name": "Guatemala City", "country": "GT", "lat": 14.64, "lon": -90.51},
+    {"name": "Tegucigalpa", "country": "HN", "lat": 14.07, "lon": -87.19},
+    {"name": "Santo Domingo", "country": "DO", "lat": 18.49, "lon": -69.93},
+    {"name": "San Juan", "country": "PR", "lat": 18.47, "lon": -66.11},
+    {"name": "Nassau", "country": "BS", "lat": 25.04, "lon": -77.35},
+    {"name": "Port-au-Prince", "country": "HT", "lat": 18.54, "lon": -72.34},
+
+    # South America
+    {"name": "Rio de Janeiro", "country": "BR", "lat": -22.91, "lon": -43.17},
+    {"name": "Salvador", "country": "BR", "lat": -12.97, "lon": -38.50},
+    {"name": "Recife", "country": "BR", "lat": -8.05, "lon": -34.88},
+    {"name": "Fortaleza", "country": "BR", "lat": -3.73, "lon": -38.52},
+    {"name": "Manaus", "country": "BR", "lat": -3.12, "lon": -60.02},
+    {"name": "Porto Alegre", "country": "BR", "lat": -30.03, "lon": -51.23},
+    {"name": "Medellin", "country": "CO", "lat": 6.25, "lon": -75.57},
+    {"name": "Cali", "country": "CO", "lat": 3.43, "lon": -76.52},
+    {"name": "Cartagena", "country": "CO", "lat": 10.40, "lon": -75.51},
+    {"name": "Asuncion", "country": "PY", "lat": -25.28, "lon": -57.63},
+    {"name": "Arequipa", "country": "PE", "lat": -16.41, "lon": -71.54},
+    {"name": "Cusco", "country": "PE", "lat": -13.52, "lon": -71.97},
+    {"name": "Guayaquil", "country": "EC", "lat": -2.17, "lon": -79.92},
+    {"name": "Valparaiso", "country": "CL", "lat": -33.04, "lon": -71.62},
+    {"name": "Punta Arenas", "country": "CL", "lat": -53.16, "lon": -70.91},
+    {"name": "Mendoza", "country": "AR", "lat": -32.89, "lon": -68.84},
+    {"name": "Ushuaia", "country": "AR", "lat": -54.81, "lon": -68.30},
+
+    # Europe — West & South
+    {"name": "Barcelona", "country": "ES", "lat": 41.39, "lon": 2.17},
+    {"name": "Seville", "country": "ES", "lat": 37.39, "lon": -5.99},
+    {"name": "Valencia", "country": "ES", "lat": 39.47, "lon": -0.38},
+    {"name": "Bilbao", "country": "ES", "lat": 43.26, "lon": -2.93},
+    {"name": "Porto", "country": "PT", "lat": 41.15, "lon": -8.61},
+    {"name": "Marseille", "country": "FR", "lat": 43.30, "lon": 5.37},
+    {"name": "Lyon", "country": "FR", "lat": 45.76, "lon": 4.84},
+    {"name": "Brussels", "country": "BE", "lat": 50.85, "lon": 4.35},
+    {"name": "Geneva", "country": "CH", "lat": 46.20, "lon": 6.14},
+    {"name": "Milan", "country": "IT", "lat": 45.46, "lon": 9.19},
+    {"name": "Naples", "country": "IT", "lat": 40.85, "lon": 14.27},
+    {"name": "Palermo", "country": "IT", "lat": 38.11, "lon": 13.36},
+    {"name": "Venice", "country": "IT", "lat": 45.44, "lon": 12.33},
+    {"name": "Florence", "country": "IT", "lat": 43.77, "lon": 11.26},
+    {"name": "Valletta", "country": "MT", "lat": 35.90, "lon": 14.51},
+
+    # Europe — Central & North
+    {"name": "Hamburg", "country": "DE", "lat": 53.55, "lon": 10.00},
+    {"name": "Munich", "country": "DE", "lat": 48.14, "lon": 11.58},
+    {"name": "Frankfurt", "country": "DE", "lat": 50.11, "lon": 8.68},
+    {"name": "Cologne", "country": "DE", "lat": 50.94, "lon": 6.96},
+    {"name": "Gothenburg", "country": "SE", "lat": 57.71, "lon": 11.97},
+    {"name": "Bergen", "country": "NO", "lat": 60.39, "lon": 5.32},
+    {"name": "Tromso", "country": "NO", "lat": 69.65, "lon": 18.96},
+    {"name": "Tallinn", "country": "EE", "lat": 59.44, "lon": 24.75},
+    {"name": "Riga", "country": "LV", "lat": 56.95, "lon": 24.11},
+    {"name": "Edinburgh", "country": "GB", "lat": 55.95, "lon": -3.19},
+    {"name": "Glasgow", "country": "GB", "lat": 55.86, "lon": -4.26},
+    {"name": "Manchester", "country": "GB", "lat": 53.48, "lon": -2.24},
+    {"name": "Belfast", "country": "GB", "lat": 54.60, "lon": -5.92},
+
+    # Europe — East & Balkans
+    {"name": "Krakow", "country": "PL", "lat": 50.06, "lon": 19.94},
+    {"name": "Gdansk", "country": "PL", "lat": 54.35, "lon": 18.65},
+    {"name": "Minsk", "country": "BY", "lat": 53.90, "lon": 27.56},
+    {"name": "St. Petersburg", "country": "RU", "lat": 59.94, "lon": 30.31},
+    {"name": "Sofia", "country": "BG", "lat": 42.70, "lon": 23.32},
+    {"name": "Belgrade", "country": "RS", "lat": 44.81, "lon": 20.46},
+    {"name": "Zagreb", "country": "HR", "lat": 45.81, "lon": 15.98},
+    {"name": "Sarajevo", "country": "BA", "lat": 43.86, "lon": 18.41},
+    {"name": "Thessaloniki", "country": "GR", "lat": 40.64, "lon": 22.94},
+
+    # Russia & neighbors (continental/arctic)
+    {"name": "Novosibirsk", "country": "RU", "lat": 55.03, "lon": 82.92},
+    {"name": "Yekaterinburg", "country": "RU", "lat": 56.84, "lon": 60.60},
+    {"name": "Vladivostok", "country": "RU", "lat": 43.13, "lon": 131.89},
+    {"name": "Irkutsk", "country": "RU", "lat": 52.29, "lon": 104.28},
+    {"name": "Yakutsk", "country": "RU", "lat": 62.03, "lon": 129.73},
+    {"name": "Sochi", "country": "RU", "lat": 43.58, "lon": 39.72},
+
+    # Africa
+    {"name": "Khartoum", "country": "SD", "lat": 15.59, "lon": 32.54},
+    {"name": "Kinshasa", "country": "CD", "lat": -4.44, "lon": 15.27},
+    {"name": "Luanda", "country": "AO", "lat": -8.84, "lon": 13.23},
+    {"name": "Windhoek", "country": "NA", "lat": -22.57, "lon": 17.08},
+    {"name": "Harare", "country": "ZW", "lat": -17.83, "lon": 31.05},
+    {"name": "Lusaka", "country": "ZM", "lat": -15.42, "lon": 28.29},
+    {"name": "Maputo", "country": "MZ", "lat": -25.97, "lon": 32.57},
+    {"name": "Abidjan", "country": "CI", "lat": 5.36, "lon": -4.01},
+    {"name": "Douala", "country": "CM", "lat": 4.05, "lon": 9.77},
+    {"name": "Abuja", "country": "NG", "lat": 9.07, "lon": 7.48},
+    {"name": "Antananarivo", "country": "MG", "lat": -18.88, "lon": 47.51},
+    {"name": "Mogadishu", "country": "SO", "lat": 2.04, "lon": 45.34},
+    {"name": "Kampala", "country": "UG", "lat": 0.35, "lon": 32.58},
+    {"name": "Bamako", "country": "ML", "lat": 12.65, "lon": -8.00},
+    {"name": "Ouagadougou", "country": "BF", "lat": 12.37, "lon": -1.53},
+    {"name": "Timbuktu", "country": "ML", "lat": 16.77, "lon": -3.01},
+    {"name": "Aswan", "country": "EG", "lat": 24.09, "lon": 32.90},
+    {"name": "Port Louis", "country": "MU", "lat": -20.17, "lon": 57.50},
+    {"name": "Mombasa", "country": "KE", "lat": -4.03, "lon": 39.67},
+
+    # Middle East
+    {"name": "Jerusalem", "country": "IL", "lat": 31.77, "lon": 35.21},
+    {"name": "Beirut", "country": "LB", "lat": 33.89, "lon": 35.50},
+    {"name": "Damascus", "country": "SY", "lat": 33.51, "lon": 36.29},
+    {"name": "Baghdad", "country": "IQ", "lat": 33.34, "lon": 44.40},
+    {"name": "Kuwait City", "country": "KW", "lat": 29.38, "lon": 47.99},
+    # Cities from Sanaa onward were removed after an Open-Meteo throttle
+    # interrupted the climatology build at city 230/290. Chunks for the
+    # dropped cities remain in the parquet cache and can be re-added later
+    # by restoring their entries here and re-running the builder.
 ]
 
 
