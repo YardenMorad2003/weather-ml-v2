@@ -124,7 +124,7 @@ export default function ExplorerPage() {
       <header>
         <h1 className="text-3xl font-semibold tracking-tight">Climate map</h1>
         <p className="mt-2 text-zinc-400">
-          102 cities projected onto 2D via PCA. Similar climates cluster together.
+          230 cities projected onto 2D via PCA. Similar climates cluster together.
         </p>
       </header>
 

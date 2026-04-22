@@ -27,7 +27,7 @@ export default function AboutPage() {
 
       <Section title="What's under the hood">
         <p>
-          Every one of the 102 reference cities has a detailed climate{" "}
+          Every one of the 230 reference cities has a detailed climate{" "}
           <em>fingerprint</em>: monthly averages of 8 weather variables
           (temperature, humidity, rainfall, wind, sunshine, cloud cover,
           pressure, dewpoint) for each month of the year. That's 96 numbers
@@ -42,7 +42,7 @@ export default function AboutPage() {
           December/January/February temperatures.
         </p>
         <p>
-          The app then ranks all 102 cities by how close their fingerprints
+          The app then ranks all 230 cities by how close their fingerprints
           are to your modified target. Dimensions you explicitly asked about
           carry more weight, but every dimension influences the final score.
         </p>
@@ -101,7 +101,7 @@ export default function AboutPage() {
 
       <Section title="The Explorer tab">
         <p>
-          The Explorer projects all 102 cities from their 96-number
+          The Explorer projects all 230 cities from their 96-number
           fingerprints down to a 2D map so climatically similar cities sit
           close together. The axes are automatically named (e.g. &quot;Summer
           heat and humidity&quot;, &quot;Mild overcast winters&quot;) based on
@@ -115,7 +115,7 @@ export default function AboutPage() {
       <Section title="What it doesn't know">
         <ul className="space-y-2 list-disc pl-5 marker:text-zinc-600">
           <li>
-            Only the 102 canonical cities are ranked. If you anchor to a city
+            Only the 230 canonical cities are ranked. If you anchor to a city
             outside that list (&quot;Beirut&quot;, &quot;Cedar Rapids&quot;),
             the app fetches its data on demand — expect a ~10-second wait the
             first time that city is ever requested.
