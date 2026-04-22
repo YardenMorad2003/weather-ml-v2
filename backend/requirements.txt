@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+pydantic
+pydantic-settings
+sqlalchemy
+openai
+python-dotenv
+numpy
+pandas
+scikit-learn
+requests

@@ -1,0 +1,83 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.aurora::before,
+.aurora::after {
+  content: "";
+  position: absolute;
+  inset: -25%;
+  filter: blur(90px);
+  will-change: transform;
+}
+
+.aurora::before {
+  background:
+    radial-gradient(42% 42% at 18% 28%, rgba(99, 102, 241, 0.22), transparent 62%),
+    radial-gradient(38% 38% at 82% 22%, rgba(244, 63, 94, 0.14), transparent 62%),
+    radial-gradient(48% 48% at 72% 82%, rgba(16, 185, 129, 0.14), transparent 62%),
+    radial-gradient(32% 32% at 12% 88%, rgba(168, 85, 247, 0.18), transparent 62%);
+  animation: aurora-drift 32s ease-in-out infinite alternate;
+}
+
+.aurora::after {
+  background:
+    radial-gradient(36% 36% at 55% 38%, rgba(236, 72, 153, 0.12), transparent 62%),
+    radial-gradient(44% 44% at 30% 72%, rgba(14, 165, 233, 0.14), transparent 62%),
+    radial-gradient(30% 30% at 88% 62%, rgba(250, 204, 21, 0.08), transparent 62%);
+  animation: aurora-drift 48s ease-in-out infinite alternate-reverse;
+  animation-delay: -18s;
+  opacity: 0.85;
+}
+
+.aurora-grain {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: radial-gradient(circle at center, transparent 55%, rgba(0, 0, 0, 0.6) 100%);
+}
+
+@keyframes aurora-drift {
+  0%   { transform: translate3d(-4%, -4%, 0) rotate(0deg) scale(1); }
+  50%  { transform: translate3d(5%, 3%, 0) rotate(3deg) scale(1.06); }
+  100% { transform: translate3d(-3%, 5%, 0) rotate(-2deg) scale(0.96); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora::before,
+  .aurora::after {
+    animation: none;
+  }
+}

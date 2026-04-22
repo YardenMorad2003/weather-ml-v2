@@ -1,0 +1,65 @@
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel
+from sqlalchemy.orm import Session
+
+from ..db.session import get_db
+from ..services.recommender import recommend_from_text
+from ..services.nl_parser import ParsedQuery
+
+router = APIRouter(prefix="/recommend", tags=["recommend"])
+
+
+class TextQuery(BaseModel):
+    text: str
+    top_k: int = 10
+
+
+class AnchorOut(BaseModel):
+    name: str
+    country: str
+    lat: float
+    lon: float
+    source: str
+
+
+class ReasonOut(BaseModel):
+    label: str
+    detail: str
+    matched: bool
+
+
+class CityOut(BaseModel):
+    city: str
+    country: str
+    lat: float
+    lon: float
+    similarity: float
+    reasons: list[ReasonOut]
+
+
+class RecommendOut(BaseModel):
+    parsed: ParsedQuery
+    anchor: AnchorOut | None
+    results: list[CityOut]
+
+
+@router.post("/text", response_model=RecommendOut)
+def recommend_text(q: TextQuery, db: Session = Depends(get_db)):
+    resp = recommend_from_text(db, q.text, top_k=q.top_k)
+    return RecommendOut(
+        parsed=resp.parsed,
+        anchor=(
+            AnchorOut(
+                name=resp.anchor.name, country=resp.anchor.country,
+                lat=resp.anchor.lat, lon=resp.anchor.lon, source=resp.anchor.source,
+            ) if resp.anchor else None
+        ),
+        results=[
+            CityOut(
+                city=r.city, country=r.country, lat=r.lat, lon=r.lon,
+                similarity=r.similarity,
+                reasons=[ReasonOut(**re.__dict__) for re in r.reasons],
+            )
+            for r in resp.results
+        ],
+    )
