@@ -1,10 +1,15 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Weather ML",
   description: "Vibe-based city climate recommender",
+};
+
+export const viewport: Viewport = {
+  colorScheme: "dark",
+  themeColor: "#09090b",
 };
 
 export default function RootLayout({
