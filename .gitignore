@@ -16,7 +16,8 @@ dist/
 *.tsbuildinfo
 next-env.d.ts
 
-backend/cache/
+backend/cache/*
+!backend/cache/profiles_*.npz
 *.db
 *.sqlite
 *.sqlite3

@@ -10,7 +10,10 @@ from .routers import cities as cities_router
 app = FastAPI(title="Weather ML v2")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://yardenmorad2003.github.io",
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
