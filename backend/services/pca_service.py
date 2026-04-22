@@ -54,6 +54,9 @@ class PCAOverview:
     pc1_label: str
     pc2_label: str
     pc3_label: str
+    pc1_explanation: str
+    pc2_explanation: str
+    pc3_explanation: str
     explained_variance: list[float]
 
 
@@ -78,17 +81,25 @@ def _top_loadings(components_row: np.ndarray, k: int = 8) -> list[Loading]:
     return out
 
 
+class _AxisDescription(BaseModel):
+    label: str
+    explanation: str
+
+
 class _AxisLabels(BaseModel):
-    pc1: str
-    pc2: str
-    pc3: str
+    pc1: _AxisDescription
+    pc2: _AxisDescription
+    pc3: _AxisDescription
 
 
 def _label_axes(
     pc1_top: list[Loading],
     pc2_top: list[Loading],
     pc3_top: list[Loading],
-) -> tuple[str, str, str]:
+) -> tuple[tuple[str, str], tuple[str, str], tuple[str, str]]:
+    """Return ((label, explanation), (label, explanation), (label, explanation))
+    — one tuple per principal component."""
+
     def fmt(loadings: list[Loading]) -> str:
         return ", ".join(
             f"{l.feature} in {l.month} ({'+' if l.weight >= 0 else ''}{l.weight:.2f})"
@@ -102,13 +113,23 @@ def _label_axes(
             {
                 "role": "system",
                 "content": (
-                    "You label PCA axes of a climate embedding for interpretability. "
-                    "Each axis is a direction in 96-d climate space (12 months x 8 features: "
-                    "temp, humidity, dewpoint, precip, cloud, pressure, wind, clear_sky). "
-                    "Given the top (feature, month, signed weight) loadings, produce a "
-                    "2-5 word label describing what a city HIGH on that axis feels like. "
-                    "Examples: 'Summer heat & humidity', 'Mild overcast winters', "
-                    "'Dry sunny year-round', 'Big seasonal temperature swing'."
+                    "You label PCA axes of a climate embedding for non-technical "
+                    "users. Each axis is a direction in 96-d climate space (12 months "
+                    "x 8 features: temp, humidity, dewpoint, precip, cloud, pressure, "
+                    "wind, clear_sky). For each axis, produce:\n"
+                    "- label: 2-5 words describing what a city HIGH on that axis "
+                    "feels like. Examples: 'Summer heat & humidity', "
+                    "'Mild overcast winters', 'Big seasonal swing'.\n"
+                    "- explanation: 1-2 plain-English sentences (max ~35 words) "
+                    "saying which features drive this axis and what kind of city "
+                    "scores high on it. Refer to seasons (late autumn, early winter) "
+                    "rather than specific months, and avoid statistics jargon. "
+                    "Name a known example city if it fits naturally, but keep it "
+                    "short.\n\n"
+                    "Example explanation: 'High on this axis means clear skies and "
+                    "little rain through autumn into winter. Mediterranean and "
+                    "desert cities like Athens and Marrakech rank high; overcast "
+                    "places like Seattle rank low.'"
                 ),
             },
             {
@@ -122,8 +143,12 @@ def _label_axes(
         ],
         response_format=_AxisLabels,
     )
-    labels = completion.choices[0].message.parsed
-    return labels.pc1, labels.pc2, labels.pc3
+    r = completion.choices[0].message.parsed
+    return (
+        (r.pc1.label, r.pc1.explanation),
+        (r.pc2.label, r.pc2.explanation),
+        (r.pc3.label, r.pc3.explanation),
+    )
 
 
 def get_overview() -> PCAOverview:
@@ -150,7 +175,7 @@ def get_overview() -> PCAOverview:
 
     if "axis_labels" not in st:
         st["axis_labels"] = _label_axes(pc1_top, pc2_top, pc3_top)
-    pc1_label, pc2_label, pc3_label = st["axis_labels"]
+    (pc1_label, pc1_expl), (pc2_label, pc2_expl), (pc3_label, pc3_expl) = st["axis_labels"]
 
     return PCAOverview(
         cities=cities,
@@ -160,6 +185,9 @@ def get_overview() -> PCAOverview:
         pc1_label=pc1_label,
         pc2_label=pc2_label,
         pc3_label=pc3_label,
+        pc1_explanation=pc1_expl,
+        pc2_explanation=pc2_expl,
+        pc3_explanation=pc3_expl,
         explained_variance=[float(v) for v in pca.explained_variance_ratio_],
     )
 

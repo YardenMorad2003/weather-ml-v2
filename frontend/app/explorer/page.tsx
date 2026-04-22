@@ -176,14 +176,17 @@ export default function ExplorerPage() {
       <div className="grid md:grid-cols-3 gap-6">
         <LoadingsPanel
           title={`PC1 · ${overview.pc1_label}`}
+          explanation={overview.pc1_explanation}
           loadings={overview.pc1_top}
         />
         <LoadingsPanel
           title={`PC2 · ${overview.pc2_label}`}
+          explanation={overview.pc2_explanation}
           loadings={overview.pc2_top}
         />
         <LoadingsPanel
           title={`PC3 · ${overview.pc3_label}`}
+          explanation={overview.pc3_explanation}
           loadings={overview.pc3_top}
         />
       </div>
@@ -193,25 +196,42 @@ export default function ExplorerPage() {
 
 function LoadingsPanel({
   title,
+  explanation,
   loadings,
 }: {
   title: string;
+  explanation: string;
   loadings: PCAOverview["pc1_top"];
 }) {
   return (
-    <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
-      <h3 className="text-sm font-medium text-zinc-300 mb-3">{title}</h3>
-      <ul className="space-y-1.5 text-sm">
-        {loadings.map((l, i) => (
-          <li key={i} className="flex items-center justify-between tabular-nums">
-            <span className="text-zinc-400">{l.label}</span>
-            <span className={l.weight >= 0 ? "text-emerald-400" : "text-rose-400"}>
-              {l.weight >= 0 ? "+" : ""}
-              {l.weight.toFixed(3)}
-            </span>
-          </li>
-        ))}
-      </ul>
+    <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4 space-y-3">
+      <div>
+        <h3 className="text-sm font-medium text-zinc-300">{title}</h3>
+        <p className="mt-1.5 text-xs text-zinc-400 leading-relaxed">
+          {explanation}
+        </p>
+      </div>
+      <div className="border-t border-zinc-800 pt-3">
+        <div className="text-[10px] uppercase tracking-wide text-zinc-500 mb-2">
+          Top contributors
+        </div>
+        <ul className="space-y-1.5 text-sm">
+          {loadings.map((l, i) => (
+            <li
+              key={i}
+              className="flex items-center justify-between tabular-nums"
+            >
+              <span className="text-zinc-400">{l.label}</span>
+              <span
+                className={l.weight >= 0 ? "text-emerald-400" : "text-rose-400"}
+              >
+                {l.weight >= 0 ? "+" : ""}
+                {l.weight.toFixed(3)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }

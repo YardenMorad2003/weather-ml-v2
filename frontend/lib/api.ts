@@ -65,6 +65,9 @@ export type PCAOverview = {
   pc1_label: string;
   pc2_label: string;
   pc3_label: string;
+  pc1_explanation: string;
+  pc2_explanation: string;
+  pc3_explanation: string;
   explained_variance: number[];
 };
 

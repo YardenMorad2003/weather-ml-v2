@@ -34,6 +34,9 @@ class PCAOverviewOut(BaseModel):
     pc1_label: str
     pc2_label: str
     pc3_label: str
+    pc1_explanation: str
+    pc2_explanation: str
+    pc3_explanation: str
     explained_variance: list[float]
 
 
@@ -60,6 +63,9 @@ def overview():
         pc1_label=o.pc1_label,
         pc2_label=o.pc2_label,
         pc3_label=o.pc3_label,
+        pc1_explanation=o.pc1_explanation,
+        pc2_explanation=o.pc2_explanation,
+        pc3_explanation=o.pc3_explanation,
         explained_variance=o.explained_variance,
     )
 
