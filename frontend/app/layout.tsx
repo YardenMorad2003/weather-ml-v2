@@ -21,6 +21,7 @@ export default function RootLayout({
             <div className="flex gap-4 text-sm text-zinc-400">
               <Link href="/" className="hover:text-zinc-100 transition">Query</Link>
               <Link href="/explorer" className="hover:text-zinc-100 transition">Explorer</Link>
+              <Link href="/about" className="hover:text-zinc-100 transition">How it works</Link>
             </div>
           </div>
         </nav>
