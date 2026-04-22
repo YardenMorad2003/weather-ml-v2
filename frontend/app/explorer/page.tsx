@@ -33,10 +33,11 @@ export default function ExplorerPage() {
       const cityTrace = {
         x: overview.cities.map((c) => c.pc1),
         y: overview.cities.map((c) => c.pc2),
+        z: overview.cities.map((c) => c.pc3),
         text: overview.cities.map((c) => `${c.name}, ${c.country}`),
         mode: "markers",
-        type: "scatter",
-        marker: { size: 9, color: "#a5b4fc", opacity: 0.85 },
+        type: "scatter3d",
+        marker: { size: 4, color: "#a5b4fc", opacity: 0.85 },
         hoverinfo: "text",
         name: "Cities",
       };
@@ -46,16 +47,29 @@ export default function ExplorerPage() {
         traces.push({
           x: [projected.pc1],
           y: [projected.pc2],
+          z: [projected.pc3],
           text: [
             `your query${projected.anchor_name ? ` (${projected.anchor_name})` : ""}`,
           ],
           mode: "markers",
-          type: "scatter",
-          marker: { size: 18, color: "#f43f5e", symbol: "star" },
+          type: "scatter3d",
+          marker: {
+            size: 8,
+            color: "#f43f5e",
+            symbol: "diamond",
+            line: { color: "#fff", width: 1 },
+          },
           hoverinfo: "text",
           name: "You",
         });
       }
+
+      const axisStyle = {
+        gridcolor: "#27272a",
+        zerolinecolor: "#3f3f46",
+        showbackground: false,
+        color: "#a1a1aa",
+      };
 
       Plotly.newPlot(
         plotRef.current,
@@ -63,25 +77,33 @@ export default function ExplorerPage() {
         traces as any,
         {
           autosize: true,
-          height: 520,
+          height: 620,
           paper_bgcolor: "rgba(0,0,0,0)",
           plot_bgcolor: "rgba(0,0,0,0)",
           font: { color: "#e4e4e7" },
-          xaxis: {
-            title: {
-              text: `${overview.pc1_label} · ${(overview.explained_variance[0] * 100).toFixed(0)}% var`,
+          scene: {
+            bgcolor: "rgba(0,0,0,0)",
+            xaxis: {
+              ...axisStyle,
+              title: {
+                text: `PC1 · ${overview.pc1_label} (${(overview.explained_variance[0] * 100).toFixed(0)}%)`,
+              },
             },
-            gridcolor: "#27272a",
-            zerolinecolor: "#3f3f46",
-          },
-          yaxis: {
-            title: {
-              text: `${overview.pc2_label} · ${(overview.explained_variance[1] * 100).toFixed(0)}% var`,
+            yaxis: {
+              ...axisStyle,
+              title: {
+                text: `PC2 · ${overview.pc2_label} (${(overview.explained_variance[1] * 100).toFixed(0)}%)`,
+              },
             },
-            gridcolor: "#27272a",
-            zerolinecolor: "#3f3f46",
+            zaxis: {
+              ...axisStyle,
+              title: {
+                text: `PC3 · ${overview.pc3_label} (${(overview.explained_variance[2] * 100).toFixed(0)}%)`,
+              },
+            },
+            camera: { eye: { x: 1.4, y: 1.4, z: 1.0 } },
           },
-          margin: { t: 20, r: 20, b: 50, l: 50 },
+          margin: { t: 10, r: 10, b: 10, l: 10 },
           showlegend: false,
         },
         { displayModeBar: false, responsive: true }
@@ -124,7 +146,9 @@ export default function ExplorerPage() {
       <header>
         <h1 className="text-3xl font-semibold tracking-tight">Climate map</h1>
         <p className="mt-2 text-zinc-400">
-          230 cities projected onto 2D via PCA. Similar climates cluster together.
+          230 cities projected onto 3D via PCA. Click and drag to rotate;
+          similar climates cluster together. Axis labels tell you what each
+          dimension means.
         </p>
       </header>
 
@@ -146,10 +170,10 @@ export default function ExplorerPage() {
       </form>
 
       <div className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-2">
-        <div ref={plotRef} style={{ width: "100%", height: 520 }} />
+        <div ref={plotRef} style={{ width: "100%", height: 620 }} />
       </div>
 
-      <div className="grid md:grid-cols-2 gap-6">
+      <div className="grid md:grid-cols-3 gap-6">
         <LoadingsPanel
           title={`PC1 · ${overview.pc1_label}`}
           loadings={overview.pc1_top}
@@ -157,6 +181,10 @@ export default function ExplorerPage() {
         <LoadingsPanel
           title={`PC2 · ${overview.pc2_label}`}
           loadings={overview.pc2_top}
+        />
+        <LoadingsPanel
+          title={`PC3 · ${overview.pc3_label}`}
+          loadings={overview.pc3_top}
         />
       </div>
     </div>

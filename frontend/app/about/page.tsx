@@ -102,13 +102,15 @@ export default function AboutPage() {
       <Section title="The Explorer tab">
         <p>
           The Explorer projects all 230 cities from their 96-number
-          fingerprints down to a 2D map so climatically similar cities sit
-          close together. The axes are automatically named (e.g. &quot;Summer
-          heat and humidity&quot;, &quot;Mild overcast winters&quot;) based on
-          which monthly features drive them, so the map is readable without a
-          statistics background. Type a query on that page and a red star
-          appears where your modified target lands — useful for seeing
-          visually which cluster fits your intent.
+          fingerprints down to a 3D scatter so climatically similar cities
+          sit close together. You can rotate the plot by clicking and
+          dragging. The three axes are automatically named (e.g. &quot;Summer
+          heat and humidity&quot;, &quot;Mild overcast winters&quot;, &quot;Big
+          seasonal swing&quot;) based on which monthly features drive them,
+          so the map is readable without a statistics background. Type a
+          query on that page and a red marker appears where your modified
+          target lands — useful for seeing visually which cluster fits your
+          intent.
         </p>
       </Section>
 

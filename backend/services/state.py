@@ -23,7 +23,7 @@ def get_state():
         profiles = np.stack([phase_align(raw[i]) for i in range(len(CITIES))])
         scaler = StandardScaler().fit(profiles)
         profiles_scaled = scaler.transform(profiles)
-        pca = PCA(n_components=2, random_state=42).fit(profiles_scaled)
+        pca = PCA(n_components=3, random_state=42).fit(profiles_scaled)
         # per-feature std of annual means across all cities, for normalizing
         # "is this feature close to the anchor?" comparisons in reasons.py
         annual_per_feat = profiles.reshape(len(CITIES), 12, 8).mean(axis=1)
@@ -33,7 +33,7 @@ def get_state():
             "scaler": scaler,
             "profiles_scaled": profiles_scaled,
             "pca": pca,
-            "profiles_2d": pca.transform(profiles_scaled),
+            "profiles_proj": pca.transform(profiles_scaled),
             "feature_std": feature_std,
         })
     return _cache

@@ -47,6 +47,7 @@ export type CityPoint = {
   lon: number;
   pc1: number;
   pc2: number;
+  pc3: number;
 };
 
 export type Loading = {
@@ -60,14 +61,17 @@ export type PCAOverview = {
   cities: CityPoint[];
   pc1_top: Loading[];
   pc2_top: Loading[];
+  pc3_top: Loading[];
   pc1_label: string;
   pc2_label: string;
+  pc3_label: string;
   explained_variance: number[];
 };
 
 export type ProjectedPoint = {
   pc1: number;
   pc2: number;
+  pc3: number;
   anchor_name: string | null;
   parsed: ParsedQuery;
 };
