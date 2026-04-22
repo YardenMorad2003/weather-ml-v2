@@ -153,6 +153,13 @@ export type TournamentHistoryItem = {
   picked: string;
 };
 
+export type CityStats = {
+  temp_c: number;
+  humidity_pct: number;
+  precip_mm: number;
+  sun_pct: number;
+};
+
 export type PairCity = {
   name: string;
   country: string;
@@ -160,6 +167,7 @@ export type PairCity = {
   lon: number;
   image_url: string;
   thumb_url: string;
+  stats: CityStats;
 };
 
 export type PairResponse = {
@@ -175,12 +183,13 @@ export type FinalResponse = {
 };
 
 export async function getTournamentPair(
-  history: TournamentHistoryItem[]
+  history: TournamentHistoryItem[],
+  seed?: number
 ): Promise<PairResponse> {
   const r = await fetch(`${BASE}/tournament/pair`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ history }),
+    body: JSON.stringify({ history, seed }),
   });
   if (!r.ok) throw new Error(`tournament pair failed: ${r.status}`);
   return r.json();

@@ -13,6 +13,14 @@ class HistoryItem(BaseModel):
 
 class PairIn(BaseModel):
     history: list[HistoryItem] = []
+    seed: int | None = None
+
+
+class CityStatsOut(BaseModel):
+    temp_c: float
+    humidity_pct: float
+    precip_mm: float
+    sun_pct: float
 
 
 class PairCityOut(BaseModel):
@@ -22,6 +30,7 @@ class PairCityOut(BaseModel):
     lon: float
     image_url: str
     thumb_url: str
+    stats: CityStatsOut
 
 
 class PairOut(BaseModel):
@@ -54,13 +63,23 @@ class FinalOut(BaseModel):
 @router.post("/pair", response_model=PairOut)
 def get_pair(body: PairIn):
     try:
-        result = svc.next_pair(None, [h.model_dump() for h in body.history])
+        result = svc.next_pair(
+            [h.model_dump() for h in body.history],
+            seed=body.seed,
+        )
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     return PairOut(
         round=result.round,
         total_rounds=result.total_rounds,
-        pair=[PairCityOut(**c.__dict__) for c in result.pair],
+        pair=[
+            PairCityOut(
+                name=c.name, country=c.country, lat=c.lat, lon=c.lon,
+                image_url=c.image_url, thumb_url=c.thumb_url,
+                stats=CityStatsOut(**c.stats.__dict__),
+            )
+            for c in result.pair
+        ],
     )
 
 

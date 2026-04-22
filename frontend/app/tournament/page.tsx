@@ -19,6 +19,10 @@ function kbClass(name: string): string {
   return KB_VARIANTS[Math.abs(h) % KB_VARIANTS.length];
 }
 
+function newSeed(): number {
+  return Math.floor(Math.random() * 1_000_000_000);
+}
+
 export default function TournamentPage() {
   const [history, setHistory] = useState<TournamentHistoryItem[]>([]);
   const [pair, setPair] = useState<PairResponse | null>(null);
@@ -26,6 +30,7 @@ export default function TournamentPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [seed, setSeed] = useState<number>(() => newSeed());
   // phase: "idle" (showing a pair), "animating" (post-click fade), "finalizing"
   const [phase, setPhase] = useState<"idle" | "animating" | "finalizing">("idle");
   const startedRef = useRef(false);
@@ -33,10 +38,12 @@ export default function TournamentPage() {
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
-    getTournamentPair([])
+    getTournamentPair([], seed)
       .then((p) => setPair(p))
       .catch((e) => setError((e as Error).message))
       .finally(() => setLoading(false));
+    // seed is captured from initial state; we never want this effect to rerun
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const pick = useCallback(
@@ -68,7 +75,7 @@ export default function TournamentPage() {
 
       setHistory(newHist);
       try {
-        const next = await getTournamentPair(newHist);
+        const next = await getTournamentPair(newHist, seed);
         setPair(next);
       } catch (e) {
         setError((e as Error).message);
@@ -76,7 +83,7 @@ export default function TournamentPage() {
         setPhase("idle");
       }
     },
-    [history, pair, phase]
+    [history, pair, phase, seed]
   );
 
   useEffect(() => {
@@ -96,15 +103,15 @@ export default function TournamentPage() {
   }, [pair, pick, phase]);
 
   function reset() {
-    startedRef.current = false;
+    const nextSeed = newSeed();
+    setSeed(nextSeed);
     setHistory([]);
     setFinal(null);
     setPair(null);
     setExpanded(null);
     setError(null);
     setLoading(true);
-    startedRef.current = true;
-    getTournamentPair([])
+    getTournamentPair([], nextSeed)
       .then((p) => setPair(p))
       .catch((e) => setError((e as Error).message))
       .finally(() => setLoading(false));
@@ -286,7 +293,22 @@ function PickCard({
           {city.name}
         </div>
         <div className="text-sm text-white/70 mt-1">{city.country}</div>
+        <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs tabular-nums text-white/85">
+          <Stat label="temp" value={`${city.stats.temp_c.toFixed(1)}°C`} />
+          <Stat label="humid" value={`${city.stats.humidity_pct.toFixed(0)}%`} />
+          <Stat label="rain" value={`${city.stats.precip_mm.toFixed(2)} mm/h`} />
+          <Stat label="sun" value={`${city.stats.sun_pct.toFixed(0)}%`} />
+        </div>
       </div>
     </button>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: string }) {
+  return (
+    <span>
+      <span className="text-white/50">{label}</span>{" "}
+      <span className="font-medium">{value}</span>
+    </span>
   );
 }

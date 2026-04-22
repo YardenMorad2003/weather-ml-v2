@@ -33,6 +33,14 @@ EMA_ALPHA = 0.35
 
 
 @dataclass
+class CityStats:
+    temp_c: float
+    humidity_pct: float
+    precip_mm: float
+    sun_pct: float
+
+
+@dataclass
 class PairCity:
     name: str
     country: str
@@ -40,6 +48,7 @@ class PairCity:
     lon: float
     image_url: str
     thumb_url: str
+    stats: CityStats
 
 
 @dataclass
@@ -67,9 +76,23 @@ def _city_index(name: str) -> Optional[int]:
     return None
 
 
+F_TEMP, F_HUM, _, F_PRECIP, _, _, _, F_CLEAR = range(8)
+
+
+def _annual_stats(profile: np.ndarray) -> CityStats:
+    m = profile.reshape(12, 8).mean(axis=0)
+    return CityStats(
+        temp_c=float(m[F_TEMP]),
+        humidity_pct=float(m[F_HUM]),
+        precip_mm=float(m[F_PRECIP]),
+        sun_pct=float(m[F_CLEAR]) * 100.0,
+    )
+
+
 def _make_pair_city(idx: int) -> PairCity:
     c = CITIES[idx]
     img = image_for(c["name"])
+    profiles = get_state()["profiles"]
     return PairCity(
         name=c["name"],
         country=c.get("country", ""),
@@ -77,6 +100,7 @@ def _make_pair_city(idx: int) -> PairCity:
         lon=c["lon"],
         image_url=img["image_url"],
         thumb_url=img["thumb_url"],
+        stats=_annual_stats(profiles[idx]),
     )
 
 
@@ -107,34 +131,50 @@ def _pick_pair(
     profiles_scaled: np.ndarray,
     used: set[int],
     round_num: int,
+    seed: Optional[int] = None,
 ) -> tuple[int, int]:
     """Return two city indices to show this round.
 
-    Rank all unused cities by distance to the current anchor. Show
-    positions (low, high) where the gap between them shrinks over time.
-    Round 1 compares rank 0 vs 20, round 10 compares rank 0 vs 3.
+    Rank unused cities by distance to the current anchor. Pick a low-rank
+    city (close-to-anchor) and a higher-rank city (further). The gap
+    narrows over rounds. When `seed` is given, jitter the choice within
+    small windows so each game shows different openings — same seed +
+    same history is still deterministic (for re-renders).
     """
     n = len(profiles_scaled)
-    weights = np.ones_like(anchor)  # unweighted for pair selection
+    weights = np.ones_like(anchor)
     dists = np.array([
         _weighted_distance(anchor, profiles_scaled[i], weights) if i not in used else np.inf
         for i in range(n)
     ])
-    order = np.argsort(dists)  # nearest first, np.inf cities at end
-    # drop used (which are at the end as np.inf)
+    order = np.argsort(dists)
     order = [int(i) for i in order if not np.isinf(dists[i])]
     if len(order) < 2:
         raise ValueError("not enough unused cities for a pair")
 
-    # low idx stays at the current top, high idx widens in early rounds
     spread = max(2, 22 - round_num * 2)  # r1=20, r5=12, r10=2
-    low_idx = min(round_num - 1, len(order) - 2)  # rotates the top-ranked city each round
-    low_idx = max(0, low_idx)
-    high_idx = min(low_idx + spread, len(order) - 1)
+
+    if seed is not None:
+        rng = np.random.RandomState((seed + round_num * 9973) % (2**31))
+        low_pool = min(8, len(order))  # random low from top 8 nearest
+        low_idx = int(rng.randint(0, low_pool))
+        # pick high from a window around low_idx + spread, still within bounds
+        hi_lo = min(low_idx + max(2, spread - 3), len(order) - 1)
+        hi_hi = min(low_idx + spread + 3, len(order))
+        if hi_hi <= hi_lo:
+            hi_hi = hi_lo + 1
+        high_idx = int(rng.randint(hi_lo, hi_hi))
+    else:
+        low_idx = max(0, min(round_num - 1, len(order) - 2))
+        high_idx = min(low_idx + spread, len(order) - 1)
+
     return order[low_idx], order[high_idx]
 
 
-def next_pair(seed_text: Optional[str], history: list[HistoryItem]) -> PairOut:
+def next_pair(
+    history: list[HistoryItem],
+    seed: Optional[int] = None,
+) -> PairOut:
     st = get_state()
     profiles_scaled = st["profiles_scaled"]
 
@@ -144,7 +184,7 @@ def next_pair(seed_text: Optional[str], history: list[HistoryItem]) -> PairOut:
 
     anchor = _compute_anchor(history, profiles_scaled)
     used = _used_indices(history)
-    i, j = _pick_pair(anchor, profiles_scaled, used, round_num)
+    i, j = _pick_pair(anchor, profiles_scaled, used, round_num, seed=seed)
 
     return PairOut(
         round=round_num,
