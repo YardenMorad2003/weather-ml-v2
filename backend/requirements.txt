@@ -7,5 +7,6 @@ openai
 python-dotenv
 numpy
 pandas
+pyarrow
 scikit-learn
 requests

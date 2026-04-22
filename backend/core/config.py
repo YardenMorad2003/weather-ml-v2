@@ -10,7 +10,6 @@ class Settings(BaseSettings):
     openai_api_key: str
     openai_model: str = "gpt-4o-mini"
     database_url: str
-    weather_ml_path: str
 
 
 settings = Settings()
