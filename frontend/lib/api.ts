@@ -147,3 +147,53 @@ export async function projectText(text: string): Promise<ProjectedPoint> {
   if (!r.ok) throw new Error(`project failed: ${r.status}`);
   return r.json();
 }
+
+export type TournamentHistoryItem = {
+  shown: [string, string];
+  picked: string;
+};
+
+export type PairCity = {
+  name: string;
+  country: string;
+  lat: number;
+  lon: number;
+  image_url: string;
+  thumb_url: string;
+};
+
+export type PairResponse = {
+  round: number;
+  total_rounds: number;
+  pair: [PairCity, PairCity];
+};
+
+export type FinalResponse = {
+  rounds_completed: number;
+  picked: string[];
+  results: CityResult[];
+};
+
+export async function getTournamentPair(
+  history: TournamentHistoryItem[]
+): Promise<PairResponse> {
+  const r = await fetch(`${BASE}/tournament/pair`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ history }),
+  });
+  if (!r.ok) throw new Error(`tournament pair failed: ${r.status}`);
+  return r.json();
+}
+
+export async function getTournamentFinal(
+  history: TournamentHistoryItem[]
+): Promise<FinalResponse> {
+  const r = await fetch(`${BASE}/tournament/final`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ history }),
+  });
+  if (!r.ok) throw new Error(`tournament final failed: ${r.status}`);
+  return r.json();
+}

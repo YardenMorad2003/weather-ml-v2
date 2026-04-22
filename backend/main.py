@@ -6,6 +6,7 @@ from .db import models  # noqa: F401 - register models
 from .routers import recommend as recommend_router
 from .routers import pca as pca_router
 from .routers import cities as cities_router
+from .routers import tournament as tournament_router
 
 app = FastAPI(title="Weather ML v2")
 app.add_middleware(
@@ -21,6 +22,7 @@ app.add_middleware(
 app.include_router(recommend_router.router)
 app.include_router(pca_router.router)
 app.include_router(cities_router.router)
+app.include_router(tournament_router.router)
 
 
 @app.on_event("startup")

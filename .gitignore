@@ -18,6 +18,7 @@ next-env.d.ts
 
 backend/cache/*
 !backend/cache/profiles_*.npz
+!backend/cache/city_images.json
 *.db
 *.sqlite
 *.sqlite3
