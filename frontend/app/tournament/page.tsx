@@ -33,6 +33,7 @@ export default function TournamentPage() {
   const [seed, setSeed] = useState<number>(() => newSeed());
   // phase: "idle" (showing a pair), "animating" (post-click fade), "finalizing"
   const [phase, setPhase] = useState<"idle" | "animating" | "finalizing">("idle");
+  const [bootProgress, setBootProgress] = useState(0);
   const startedRef = useRef(false);
 
   useEffect(() => {
@@ -41,10 +42,27 @@ export default function TournamentPage() {
     getTournamentPair([], seed)
       .then((p) => setPair(p))
       .catch((e) => setError((e as Error).message))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setBootProgress(100);
+      });
     // seed is captured from initial state; we never want this effect to rerun
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Asymptotic progress bar during initial boot. Free-tier Render can
+  // cold-start for 30-60s; we ease toward 95% over ~60s so the bar feels
+  // responsive early but never falsely claims to be done.
+  useEffect(() => {
+    if (pair || final || error) return;
+    const start = Date.now();
+    const id = setInterval(() => {
+      const elapsed = (Date.now() - start) / 1000;
+      const pct = 100 * (1 - Math.exp(-elapsed / 22));
+      setBootProgress(Math.min(95, pct));
+    }, 150);
+    return () => clearInterval(id);
+  }, [pair, final, error]);
 
   const pick = useCallback(
     async (choice: PairCity, other: PairCity) => {
@@ -111,10 +129,14 @@ export default function TournamentPage() {
     setExpanded(null);
     setError(null);
     setLoading(true);
+    setBootProgress(0);
     getTournamentPair([], nextSeed)
       .then((p) => setPair(p))
       .catch((e) => setError((e as Error).message))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        setLoading(false);
+        setBootProgress(100);
+      });
   }
 
   if (error) {
@@ -209,7 +231,7 @@ export default function TournamentPage() {
 
       <div
         className={`grid grid-cols-1 md:grid-cols-2 gap-1 rounded-2xl overflow-hidden border border-zinc-800 bg-zinc-950 transition-opacity duration-200 ${
-          phase === "animating" || loading ? "opacity-30" : "opacity-100"
+          phase === "animating" ? "opacity-30" : "opacity-100"
         }`}
         style={{ minHeight: "min(70vh, 640px)" }}
       >
@@ -222,11 +244,7 @@ export default function TournamentPage() {
             disabled={phase !== "idle"}
           />
         ))}
-        {!pair && loading && (
-          <div className="col-span-full flex items-center justify-center text-zinc-500 text-sm py-20">
-            Loading…
-          </div>
-        )}
+        {!pair && loading && <BootLoader progress={bootProgress} />}
       </div>
 
       {phase === "finalizing" && (
@@ -309,5 +327,33 @@ function Stat({ label, value }: { label: string; value: string }) {
       <span className="text-white/50">{label}</span>{" "}
       <span className="font-medium">{value}</span>
     </span>
+  );
+}
+
+function BootLoader({ progress }: { progress: number }) {
+  return (
+    <div className="col-span-full flex flex-col items-center justify-center px-8 py-24 gap-6">
+      <div className="text-center max-w-md">
+        <div className="text-lg font-medium text-zinc-200">
+          Waking up the climate server…
+        </div>
+        <div className="text-sm text-zinc-500 mt-2">
+          The backend sleeps after 15 min of idle on the free tier. First
+          visit takes <span className="text-zinc-300">30–60s</span>; after
+          that, every pick is instant.
+        </div>
+      </div>
+      <div className="w-full max-w-md space-y-2">
+        <div className="h-2 rounded-full bg-zinc-800 overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-emerald-500 to-emerald-400 transition-all duration-200"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+        <div className="text-xs text-zinc-500 tabular-nums text-right">
+          {progress.toFixed(0)}%
+        </div>
+      </div>
+    </div>
   );
 }
