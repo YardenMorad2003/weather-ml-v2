@@ -182,27 +182,58 @@ export type FinalResponse = {
   results: CityResult[];
 };
 
+/** Retry POST for cold-start resilience. Render free tier returns 502/503
+ * while booting; browser fetches on dead containers throw TypeError. We
+ * retry those for ~90s total; other errors (4xx, bad JSON) fail fast. */
+async function postWithRetry(
+  url: string,
+  body: unknown,
+  { maxAttempts = 6, onAttempt }: { maxAttempts?: number; onAttempt?: (n: number) => void } = {}
+): Promise<Response> {
+  const delays = [1500, 3000, 5000, 10000, 15000]; // cumulative ~35s; max sleep before 6th = +30s
+  let lastErr: unknown = null;
+  for (let i = 0; i < maxAttempts; i++) {
+    onAttempt?.(i + 1);
+    try {
+      const r = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (r.ok) return r;
+      // 5xx or gateway errors during boot: retry. 4xx: user/client bug, give up.
+      if (r.status >= 500 && r.status < 600) {
+        lastErr = new Error(`${url} ${r.status}`);
+      } else {
+        throw new Error(`${url} ${r.status}`);
+      }
+    } catch (e) {
+      // TypeError "Failed to fetch" = network-level error, retry
+      lastErr = e;
+    }
+    if (i < maxAttempts - 1) {
+      await new Promise((res) => setTimeout(res, delays[Math.min(i, delays.length - 1)]));
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(String(lastErr));
+}
+
 export async function getTournamentPair(
   history: TournamentHistoryItem[],
-  seed?: number
+  seed?: number,
+  opts?: { onAttempt?: (n: number) => void }
 ): Promise<PairResponse> {
-  const r = await fetch(`${BASE}/tournament/pair`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ history, seed }),
-  });
-  if (!r.ok) throw new Error(`tournament pair failed: ${r.status}`);
+  const r = await postWithRetry(
+    `${BASE}/tournament/pair`,
+    { history, seed },
+    { onAttempt: opts?.onAttempt }
+  );
   return r.json();
 }
 
 export async function getTournamentFinal(
   history: TournamentHistoryItem[]
 ): Promise<FinalResponse> {
-  const r = await fetch(`${BASE}/tournament/final`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ history }),
-  });
-  if (!r.ok) throw new Error(`tournament final failed: ${r.status}`);
+  const r = await postWithRetry(`${BASE}/tournament/final`, { history });
   return r.json();
 }

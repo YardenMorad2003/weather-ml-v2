@@ -34,12 +34,13 @@ export default function TournamentPage() {
   // phase: "idle" (showing a pair), "animating" (post-click fade), "finalizing"
   const [phase, setPhase] = useState<"idle" | "animating" | "finalizing">("idle");
   const [bootProgress, setBootProgress] = useState(0);
+  const [bootAttempt, setBootAttempt] = useState(1);
   const startedRef = useRef(false);
 
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
-    getTournamentPair([], seed)
+    getTournamentPair([], seed, { onAttempt: setBootAttempt })
       .then((p) => setPair(p))
       .catch((e) => setError((e as Error).message))
       .finally(() => {
@@ -130,7 +131,8 @@ export default function TournamentPage() {
     setError(null);
     setLoading(true);
     setBootProgress(0);
-    getTournamentPair([], nextSeed)
+    setBootAttempt(1);
+    getTournamentPair([], nextSeed, { onAttempt: setBootAttempt })
       .then((p) => setPair(p))
       .catch((e) => setError((e as Error).message))
       .finally(() => {
@@ -244,7 +246,9 @@ export default function TournamentPage() {
             disabled={phase !== "idle"}
           />
         ))}
-        {!pair && loading && <BootLoader progress={bootProgress} />}
+        {!pair && loading && (
+          <BootLoader progress={bootProgress} attempt={bootAttempt} />
+        )}
       </div>
 
       {phase === "finalizing" && (
@@ -330,7 +334,13 @@ function Stat({ label, value }: { label: string; value: string }) {
   );
 }
 
-function BootLoader({ progress }: { progress: number }) {
+function BootLoader({
+  progress,
+  attempt,
+}: {
+  progress: number;
+  attempt: number;
+}) {
   return (
     <div className="col-span-full flex flex-col items-center justify-center px-8 py-24 gap-6">
       <div className="text-center max-w-md">
@@ -350,8 +360,11 @@ function BootLoader({ progress }: { progress: number }) {
             style={{ width: `${progress}%` }}
           />
         </div>
-        <div className="text-xs text-zinc-500 tabular-nums text-right">
-          {progress.toFixed(0)}%
+        <div className="flex items-center justify-between text-xs text-zinc-500 tabular-nums">
+          <span>
+            {attempt > 1 ? `retry ${attempt - 1} — container still booting` : ""}
+          </span>
+          <span>{progress.toFixed(0)}%</span>
         </div>
       </div>
     </div>
