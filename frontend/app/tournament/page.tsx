@@ -140,8 +140,7 @@ export default function TournamentPage() {
         <header>
           <h1 className="text-3xl font-semibold tracking-tight">Your climate</h1>
           <p className="mt-2 text-zinc-400">
-            Based on your {final.rounds_completed} picks, here&apos;s the top match
-            and the next nine.
+            {`Based on your ${final.rounds_completed} picks, here's the top match and the next nine.`}
           </p>
         </header>
 
