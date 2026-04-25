@@ -42,7 +42,7 @@ class PCA():
     def __init__(self, n_components):
         self.n_components = n_components
         self.explained_variance_ratio_ = []
-        self.eigenvectors = []
+        self.components_ = []
 
     def fit(self, data):
         if type(data) != np.array:
@@ -67,10 +67,10 @@ class PCA():
         self.explained_variance_ratio_ = [round(var / total_variance, 4) for var in evals_desc]
         
         # store eigenvectors
-        self.eigenvectors = evecs_desc[:self.n_components].T
+        self.components_ = evecs_desc[:self.n_components].T
     
     def transform(self, data):
-        if len(self.eigenvectors) == 0:
+        if len(self.components_) == 0:
             raise RuntimeError("You have not fit a dataset yet.")
 
-        return data @ self.eigenvectors
+        return data @ self.components_
