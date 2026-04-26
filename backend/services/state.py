@@ -45,30 +45,31 @@ class PCA():
         self.components_ = []
 
     def fit(self, data):
-        if type(data) != np.array:
+        if not isinstance(data, np.ndarray):
             data = np.array(data)
-        
-        # first get covariance matrix
+
+        # eigh (vs eig) is guaranteed real for symmetric matrices like
+        # covariance, and avoids tiny imaginary components from numerical
+        # noise that would propagate into transform output.
         covariance_matrix = np.cov(data, rowvar=False)
+        eigen_vals, eigen_vecs = np.linalg.eigh(covariance_matrix)
 
-        # get eigenvalues and eigenvectors of the covariance matrix
-        eigen_vals, eigen_vecs = np.linalg.eig(covariance_matrix)
+        # eigh returns ascending order; reverse for top-K-first.
+        order = np.argsort(eigen_vals)[::-1]
+        evals_desc = eigen_vals[order]
+        # eigen_vecs columns are eigenvectors; reorder columns then keep top n.
+        evecs_desc = eigen_vecs[:, order]
 
-        # pair eigenvalue to eigenvector and then sort by largest eigenvalues
-        arr = [(eigen_vals[i], eigen_vecs[:, i]) for i in range(len(eigen_vals))]
-        arr = sorted(arr, key = lambda x: -1 * x[0])
-
-        # de-pair
-        evals_desc = np.array([x[0] for x in arr])
-        evecs_desc = np.array([x[1] for x in arr])
-
-        # add the explained variance ratios
         total_variance = np.sum(evals_desc)
-        self.explained_variance_ratio_ = [round(var / total_variance, 4) for var in evals_desc]
-        
-        # store eigenvectors
-        self.components_ = evecs_desc[:self.n_components].T
-    
+        self.explained_variance_ratio_ = [
+            round(float(v) / float(total_variance), 4) for v in evals_desc
+        ]
+
+        # components_ shape: (n_features, n_components). Columns are
+        # principal axes, so transform is `data @ components_`.
+        self.components_ = evecs_desc[:, : self.n_components]
+        return self
+
     def transform(self, data):
         if len(self.components_) == 0:
             raise RuntimeError("You have not fit a dataset yet.")
