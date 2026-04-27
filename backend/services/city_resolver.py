@@ -25,7 +25,13 @@ from ..db.models import FetchedCity
 from .profile import phase_align
 
 GEOCODE_URL = "https://geocoding-api.open-meteo.com/v1/search"
-FUZZY_CUTOFF = 0.75
+# Silent typo correction inside resolve(). 0.7 catches "Tokio" -> "Tokyo" and
+# "Sieattle" -> "Seattle"; tighter cutoffs miss those, looser ones start
+# corrupting short distinct names ("Lima" vs "Riga" sit around 0.5).
+FUZZY_CUTOFF = 0.7
+# Lenient cutoff used only by suggest_close_matches when full resolution has
+# already failed and we're proposing "did you mean?" candidates to the user.
+SUGGEST_CUTOFF = 0.55
 # Kept in sync with climatology.py defaults — any change here should match
 # `build_all_profiles_multi_year` so canonical and on-demand cities draw from
 # the same climatology window.
@@ -166,3 +172,33 @@ def resolve(db: Session, user_input: str, all_profiles: np.ndarray) -> Optional[
 
     # 5. geocode + fetch + cache
     return _fetch_and_cache(db, key, user_input)
+
+
+def suggest_close_matches(db: Session, user_input: str, n: int = 3) -> list[str]:
+    """Lenient fuzzy fallback for the "did you mean?" UX after resolve() fails.
+
+    Searches canonical names + cached fetched names with a permissive cutoff,
+    returns up to `n` display names ranked by similarity. Empty list means
+    nothing in the dataset is close enough to suggest.
+    """
+    if not user_input:
+        return []
+    key = _norm(user_input)
+    canon = _canonical_index()
+    cached_keys = [r.key for r in db.query(FetchedCity).all()]
+    candidates = list(canon.keys()) + cached_keys
+    matches = difflib.get_close_matches(key, candidates, n=n, cutoff=SUGGEST_CUTOFF)
+    out: list[str] = []
+    seen: set[str] = set()
+    for m in matches:
+        if m in canon:
+            name = CITIES[canon[m]]["name"]
+        else:
+            row = db.query(FetchedCity).filter(FetchedCity.key == m).one_or_none()
+            if row is None:
+                continue
+            name = row.name
+        if name not in seen:
+            seen.add(name)
+            out.append(name)
+    return out

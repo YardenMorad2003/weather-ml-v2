@@ -37,10 +37,16 @@ class CityOut(BaseModel):
     reasons: list[ReasonOut]
 
 
+class AnchorErrorOut(BaseModel):
+    input: str
+    suggestions: list[str]
+
+
 class RecommendOut(BaseModel):
     parsed: ParsedQuery
     anchor: AnchorOut | None
     results: list[CityOut]
+    anchor_error: AnchorErrorOut | None = None
 
 
 @router.post("/text", response_model=RecommendOut)
@@ -62,4 +68,10 @@ def recommend_text(q: TextQuery, db: Session = Depends(get_db)):
             )
             for r in resp.results
         ],
+        anchor_error=(
+            AnchorErrorOut(
+                input=resp.anchor_error.input,
+                suggestions=resp.anchor_error.suggestions,
+            ) if resp.anchor_error else None
+        ),
     )

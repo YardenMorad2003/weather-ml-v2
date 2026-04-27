@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { recommendText, type CityResult, type RecommendResponse } from "@/lib/api";
+import {
+  recommendText,
+  type AnchorError,
+  type CityResult,
+  type RecommendResponse,
+  type Vibe,
+} from "@/lib/api";
 import {
   preloadContrastive,
   rankContrastive,
@@ -208,6 +214,7 @@ export default function QueryPage() {
           resp={classicalResp}
           expanded={expanded}
           setExpanded={setExpanded}
+          onSuggestion={runQuery}
         />
       )}
 
@@ -267,11 +274,14 @@ function ClassicalResults({
   resp,
   expanded,
   setExpanded,
+  onSuggestion,
 }: {
   resp: RecommendResponse;
   expanded: string | null;
   setExpanded: (v: string | null) => void;
+  onSuggestion: (q: string) => void;
 }) {
+  const hasError = resp.anchor_error !== null;
   return (
     <section className="space-y-6">
       <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4 text-sm">
@@ -296,6 +306,15 @@ function ClassicalResults({
         </div>
       </div>
 
+      {resp.anchor_error && (
+        <AnchorErrorNotice
+          err={resp.anchor_error}
+          parsedVibes={resp.parsed.vibes}
+          onSuggestion={onSuggestion}
+        />
+      )}
+
+      {!hasError && (
       <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 p-3 text-xs">
         <div className="text-[10px] uppercase tracking-wide text-zinc-500 mb-2">
           What the similarity scores mean
@@ -319,19 +338,77 @@ function ClassicalResults({
           </div>
         </div>
       </div>
+      )}
 
-      <div className="grid gap-3">
-        {resp.results.map((c, i) => (
-          <CityCard
-            key={c.city}
-            rank={i + 1}
-            result={c}
-            expanded={expanded === c.city}
-            onToggle={() => setExpanded(expanded === c.city ? null : c.city)}
-          />
-        ))}
-      </div>
+      {!hasError && (
+        <div className="grid gap-3">
+          {resp.results.map((c, i) => (
+            <CityCard
+              key={c.city}
+              rank={i + 1}
+              result={c}
+              expanded={expanded === c.city}
+              onToggle={() => setExpanded(expanded === c.city ? null : c.city)}
+            />
+          ))}
+        </div>
+      )}
     </section>
+  );
+}
+
+function AnchorErrorNotice({
+  err,
+  parsedVibes,
+  onSuggestion,
+}: {
+  err: AnchorError;
+  parsedVibes: Vibe[];
+  onSuggestion: (q: string) => void;
+}) {
+  const vibeText = parsedVibes
+    .map((v) => `${v.intensity} ${v.axis} ${v.scope}`)
+    .join(" ")
+    .replaceAll("_", " ");
+  return (
+    <div className="rounded-lg border border-amber-900 bg-amber-950/30 p-4 text-sm space-y-3">
+      <div className="text-amber-200">
+        Couldn&apos;t find <span className="font-medium">&quot;{err.input}&quot;</span>{" "}
+        on the map. Nothing in the canonical 230 cities or the on-demand
+        geocoder matched it.
+      </div>
+      {err.suggestions.length > 0 && (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-xs text-amber-300/70">Did you mean:</span>
+          {err.suggestions.map((s) => (
+            <button
+              key={s}
+              type="button"
+              onClick={() =>
+                onSuggestion(vibeText ? `${s} but ${vibeText}` : s)
+              }
+              className="rounded-full border border-amber-800 bg-amber-950/50 px-3 py-1 text-xs text-amber-100 hover:bg-amber-900/60 hover:border-amber-700 transition"
+            >
+              {s}
+            </button>
+          ))}
+        </div>
+      )}
+      {parsedVibes.length > 0 && (
+        <div className="text-xs text-amber-300/70">
+          Or{" "}
+          <button
+            type="button"
+            onClick={() => onSuggestion(vibeText)}
+            className="underline hover:text-amber-100"
+          >
+            search just the vibe
+          </button>{" "}
+          ({vibeText.trim() || "no vibe extracted"}) using the contrastive
+          ranker.
+        </div>
+      )}
+    </div>
   );
 }
 

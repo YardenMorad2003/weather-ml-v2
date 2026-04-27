@@ -34,10 +34,16 @@ export type CityResult = {
   reasons: Reason[];
 };
 
+export type AnchorError = {
+  input: string;
+  suggestions: string[];
+};
+
 export type RecommendResponse = {
   parsed: ParsedQuery;
   anchor: Anchor | null;
   results: CityResult[];
+  anchor_error: AnchorError | null;
 };
 
 export type CityPoint = {

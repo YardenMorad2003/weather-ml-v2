@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 from ..core import weather_ml  # noqa: F401 - sys.path shim
 from cities import CITIES  # type: ignore
 
-from .city_resolver import resolve, ResolvedCity
+from .city_resolver import resolve, suggest_close_matches, ResolvedCity
 from .nl_parser import parse_query, ParsedQuery
 from .vibe_table import apply_vibes
 from .reasons import build_reasons, Reason
@@ -48,10 +48,20 @@ class CityResult:
 
 
 @dataclass
+class AnchorError:
+    """Set when the parser extracted an anchor_city the resolver couldn't
+    place. The router treats this as a recoverable failure (empty results +
+    inline message), not an exception, so the UI can offer suggestions."""
+    input: str
+    suggestions: list[str]
+
+
+@dataclass
 class RecommendResponse:
     parsed: ParsedQuery
     anchor: Optional[ResolvedCity]
     results: list[CityResult]
+    anchor_error: Optional[AnchorError] = None
 
 
 def recommend_from_text(db: Session, text: str, top_k: int = 10) -> RecommendResponse:
@@ -63,11 +73,25 @@ def recommend_from_text(db: Session, text: str, top_k: int = 10) -> RecommendRes
     anchor: Optional[ResolvedCity] = None
     if parsed.anchor_city:
         anchor = resolve(db, parsed.anchor_city, profiles)
+        if anchor is None:
+            # The user asked for a specific place we can't locate. Don't fall
+            # through to the centroid — that produces honest-looking results
+            # ("Hogwarts but sunny" -> Cairo 47%) for a query we should be
+            # admitting we couldn't satisfy.
+            return RecommendResponse(
+                parsed=parsed,
+                anchor=None,
+                results=[],
+                anchor_error=AnchorError(
+                    input=parsed.anchor_city,
+                    suggestions=suggest_close_matches(db, parsed.anchor_city),
+                ),
+            )
 
     if anchor is not None:
         user_raw = anchor.profile.reshape(1, -1)
     else:
-        # no anchor -> start from dataset centroid
+        # no anchor in the query at all -> start from dataset centroid
         user_raw = profiles.mean(axis=0, keepdims=True)
 
     user_scaled = scaler.transform(user_raw)[0]
