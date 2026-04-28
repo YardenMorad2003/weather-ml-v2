@@ -85,11 +85,13 @@ export default function QueryPage() {
         setClassicalResp(null);
         setRoutedTo("smart");
       } else {
-        // Auto: parse first via classical (it includes parser output), route
-        // by whether an anchor was extracted. Classical wins on "X but Y";
-        // contrastive wins on free-form vibe queries.
+        // Auto: parse first via classical (it includes parser output), then
+        // route on whether the parser extracted anything structured. The σ-eval
+        // showed classical wins on any query the vocabulary covers — anchor
+        // OR vibes — and contrastive's value is the residual (queries the
+        // vocabulary can't represent at all).
         const c = await recommendText(q);
-        if (c.parsed.anchor_city) {
+        if (c.parsed.anchor_city || c.parsed.vibes.length > 0) {
           setClassicalResp(c);
           setSmartResp(null);
           setRoutedTo("classical");
@@ -145,7 +147,7 @@ export default function QueryPage() {
           </div>
           <span className="text-[11px] text-zinc-500">
             {mode === "auto" &&
-              "Anchor queries → classical. Vibe queries → contrastive."}
+              "Structured queries (anchor or vibe) → classical. Pure free-form → contrastive."}
             {mode === "smart" &&
               "Runs in your browser. First query downloads ~13 MB once."}
           </span>
@@ -257,8 +259,8 @@ function RouteBadge({
         }
       >
         {routedTo === "classical"
-          ? "classical (anchor + tweak)"
-          : "contrastive (vibe)"}
+          ? "classical (vocabulary-covered)"
+          : "contrastive (free-form)"}
       </span>
       <span className="text-zinc-600">·</span>
       <span>

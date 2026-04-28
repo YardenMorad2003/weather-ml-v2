@@ -42,11 +42,22 @@ class AnchorErrorOut(BaseModel):
     suggestions: list[str]
 
 
+class SaturationOut(BaseModel):
+    anchor: str
+    axes: list[str]
+
+
+class ConflictOut(BaseModel):
+    pairs: list[dict]
+
+
 class RecommendOut(BaseModel):
     parsed: ParsedQuery
     anchor: AnchorOut | None
     results: list[CityOut]
     anchor_error: AnchorErrorOut | None = None
+    saturation: SaturationOut | None = None
+    conflict: ConflictOut | None = None
 
 
 @router.post("/text", response_model=RecommendOut)
@@ -73,5 +84,14 @@ def recommend_text(q: TextQuery, db: Session = Depends(get_db)):
                 input=resp.anchor_error.input,
                 suggestions=resp.anchor_error.suggestions,
             ) if resp.anchor_error else None
+        ),
+        saturation=(
+            SaturationOut(
+                anchor=resp.saturation.anchor,
+                axes=resp.saturation.axes,
+            ) if resp.saturation else None
+        ),
+        conflict=(
+            ConflictOut(pairs=resp.conflict.pairs) if resp.conflict else None
         ),
     )

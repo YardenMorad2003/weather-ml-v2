@@ -38,10 +38,10 @@ SCOPE_MONTHS = {
 
 # axis -> list of (feature_idx, sign). Applied to every scoped month.
 AXIS_FEATURES: dict[str, list[tuple[int, float]]] = {
-    "warmer":      [(F_TEMP, +1), (F_DEW, +0.5)],
-    "colder":      [(F_TEMP, -1), (F_DEW, -0.5)],
-    "drier":       [(F_HUM, -1), (F_DEW, -0.5), (F_PRECIP, -0.5)],
-    "more_humid":  [(F_HUM, +1), (F_DEW, +0.5)],
+    "warmer":      [(F_TEMP, +1), (F_DEW, +0.8)],
+    "colder":      [(F_TEMP, -1), (F_DEW, -0.8)],
+    "drier":       [(F_HUM, -1), (F_PRECIP, -0.5)],
+    "more_humid":  [(F_HUM, +1)],
     "less_muggy":  [(F_HUM, -1), (F_DEW, -1)],
     "wetter":      [(F_PRECIP, +1), (F_CLOUD, +0.5), (F_CLEAR, -0.5)],
     "less_rainy":  [(F_PRECIP, -1), (F_CLOUD, -0.3)],
@@ -55,6 +55,76 @@ AXIS_FEATURES: dict[str, list[tuple[int, float]]] = {
     "milder":         [],
     "more_extreme":   [],
 }
+
+
+# Pairs handled by special-branch logic in apply_vibes (not via AXIS_FEATURES).
+# detect_vibe_conflicts() can't see these via the feature-overlap check, so
+# list them explicitly.
+_SEMANTIC_OPPOSITES: list[frozenset[str]] = [
+    frozenset({"milder", "more_extreme"}),
+    frozenset({"more_seasonal", "less_seasonal"}),
+]
+
+
+def detect_vibe_conflicts(vibes: list[dict]) -> list[dict]:
+    """Find pairs of vibes that genuinely contradict each other. Two flavors:
+
+      1. Semantic opposites (milder/more_extreme, more_seasonal/less_seasonal)
+         — the special-branch axes that don't expose couplings via AXIS_FEATURES.
+      2. Feature-level opposition where EITHER both vibes touch the same
+         feature as their *primary* coupling (the leading entry, max
+         magnitude) with opposite signs, OR ≥2 features oppose at once.
+
+    Single-secondary-feature opposition (e.g. less_muggy's dewpoint at -1 vs
+    warmer's dewpoint at +0.8) is *not* flagged — the eval shows those compound
+    queries score near +0.80, well within the working range. This rule fires
+    only on pairs where the σ-eval shows compound cosines drop below ~+0.6.
+    """
+    conflicts: list[dict] = []
+    for i in range(len(vibes)):
+        for j in range(i + 1, len(vibes)):
+            v1, v2 = vibes[i], vibes[j]
+            ax1, ax2 = v1["axis"], v2["axis"]
+
+            if frozenset({ax1, ax2}) in _SEMANTIC_OPPOSITES:
+                conflicts.append({
+                    "axis_a": ax1, "axis_b": ax2, "reason": "semantic_opposite",
+                })
+                continue
+
+            f1 = AXIS_FEATURES.get(ax1, [])
+            f2 = AXIS_FEATURES.get(ax2, [])
+            if not f1 or not f2:
+                continue
+
+            months1 = set(SCOPE_MONTHS[v1.get("scope", "year_round")])
+            months2 = set(SCOPE_MONTHS[v2.get("scope", "year_round")])
+            if not (months1 & months2):
+                continue
+
+            # Find all opposed features and tag whether each is primary
+            # (leading entry — the axis's main feature) for either axis.
+            primary1, primary2 = f1[0][0], f2[0][0]
+            opposed_features: list[tuple[int, bool]] = []
+            for feat1, sign1 in f1:
+                for feat2, sign2 in f2:
+                    if feat1 == feat2 and (sign1 * sign2) < 0:
+                        is_primary = (feat1 == primary1) or (feat1 == primary2)
+                        opposed_features.append((feat1, is_primary))
+
+            if not opposed_features:
+                continue
+
+            primary_conflict = any(is_p for _, is_p in opposed_features)
+            multi_conflict = len(set(f for f, _ in opposed_features)) >= 2
+
+            if primary_conflict or multi_conflict:
+                conflicts.append({
+                    "axis_a": ax1, "axis_b": ax2,
+                    "feature_indices": sorted(set(f for f, _ in opposed_features)),
+                    "reason": "primary_opposed" if primary_conflict else "multi_opposed",
+                })
+    return conflicts
 
 
 def apply_vibes(scaled_vec: np.ndarray, vibes: list[dict]) -> tuple[np.ndarray, np.ndarray]:

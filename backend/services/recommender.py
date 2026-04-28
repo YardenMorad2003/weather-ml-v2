@@ -15,7 +15,7 @@ from cities import CITIES  # type: ignore
 
 from .city_resolver import resolve, suggest_close_matches, ResolvedCity
 from .nl_parser import parse_query, ParsedQuery
-from .vibe_table import apply_vibes
+from .vibe_table import apply_vibes, detect_vibe_conflicts
 from .reasons import build_reasons, Reason
 from .state import get_state
 
@@ -57,11 +57,32 @@ class AnchorError:
 
 
 @dataclass
+class SaturationError:
+    """The anchor is already at the extreme on the requested axis, so the
+    achievable top-K is necessarily slightly *less* extreme than the anchor
+    itself. Returning those candidates pretends to satisfy the query — surface
+    this instead so the UI can say "you're already there"."""
+    anchor: str
+    axes: list[str]
+
+
+@dataclass
+class VibeConflictError:
+    """The parsed vibes contain a contradictory pair (e.g. drier + more_humid)
+    that pushes the same feature in opposite directions over overlapping
+    months. The compound result would be semantically unreliable — surface
+    the conflict so the user can rephrase."""
+    pairs: list[dict]
+
+
+@dataclass
 class RecommendResponse:
     parsed: ParsedQuery
     anchor: Optional[ResolvedCity]
     results: list[CityResult]
     anchor_error: Optional[AnchorError] = None
+    saturation: Optional[SaturationError] = None
+    conflict: Optional[VibeConflictError] = None
 
 
 def recommend_from_text(db: Session, text: str, top_k: int = 10) -> RecommendResponse:
@@ -94,10 +115,23 @@ def recommend_from_text(db: Session, text: str, top_k: int = 10) -> RecommendRes
         # no anchor in the query at all -> start from dataset centroid
         user_raw = profiles.mean(axis=0, keepdims=True)
 
-    user_scaled = scaler.transform(user_raw)[0]
+    user_scaled_orig = scaler.transform(user_raw)[0]
 
     vibes = [v.model_dump() for v in parsed.vibes]
-    user_scaled, touched = apply_vibes(user_scaled, vibes)
+
+    # Conflict guard: refuse contradictory vibe pairs (e.g. drier + more_humid).
+    # The compound metric drops to ~+0.475 on these — direction is unreliable
+    # because the axes oppose on a shared feature/month.
+    conflicts = detect_vibe_conflicts(vibes)
+    if conflicts:
+        return RecommendResponse(
+            parsed=parsed,
+            anchor=anchor,
+            results=[],
+            conflict=VibeConflictError(pairs=conflicts),
+        )
+
+    user_scaled, touched = apply_vibes(user_scaled_orig.copy(), vibes)
 
     # weight vector: dims the user modified get FOCUS_WEIGHT, rest get BASE_WEIGHT
     weights = BASE_WEIGHT + (FOCUS_WEIGHT - BASE_WEIGHT) * touched
@@ -120,6 +154,37 @@ def recommend_from_text(db: Session, text: str, top_k: int = 10) -> RecommendRes
     anchor_profile = anchor.profile if anchor else None
 
     order = np.argsort(dists)
+
+    # Saturation guard: if the anchor is already at the extreme on the
+    # requested axis, the top-K centroid moves the wrong way and barely
+    # at all. Surface this instead of returning slightly-less-extreme
+    # neighbors that pretend to satisfy the query.
+    if vibes and touched.any():
+        expected_delta = (user_scaled - user_scaled_orig) * touched
+        top_check = [
+            int(i) for i in order
+            if not (anchor_name and CITIES[i]["name"].lower() == anchor_name)
+        ][:top_k]
+        obs_centroid = profiles_scaled[top_check].mean(axis=0)
+        obs_delta = (obs_centroid - user_scaled_orig) * touched
+        exp_norm = float(np.linalg.norm(expected_delta))
+        obs_norm = float(np.linalg.norm(obs_delta))
+        if exp_norm > 0:
+            cos = float(
+                np.dot(expected_delta, obs_delta)
+                / (exp_norm * obs_norm + 1e-9)
+            )
+            if obs_norm / exp_norm < 0.20 and cos < 0:
+                return RecommendResponse(
+                    parsed=parsed,
+                    anchor=anchor,
+                    results=[],
+                    saturation=SaturationError(
+                        anchor=anchor.name if anchor else "",
+                        axes=[v["axis"] for v in vibes],
+                    ),
+                )
+
     results: list[CityResult] = []
     for i in order:
         if anchor_name and CITIES[i]["name"].lower() == anchor_name:
