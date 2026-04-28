@@ -48,6 +48,83 @@ export default function AboutPage() {
         </p>
       </Section>
 
+      <Section title="One query, two rankers (and a router that picks)">
+        <p>
+          Two ranking algorithms sit behind the Auto mode:
+        </p>
+        <ul className="space-y-2 list-disc pl-5 marker:text-zinc-600">
+          <li>
+            <strong className="text-zinc-200">Classical.</strong> Looks up
+            your anchor city&apos;s climate fingerprint, shifts the
+            dimensions you asked about (warmer, drier, sunnier, etc.), and
+            finds the cities closest to the modified target. Best when you
+            mention a city or any specific climate adjustment.
+          </li>
+          <li>
+            <strong className="text-zinc-200">Smart (Contrastive).</strong>{" "}
+            A small neural network trained on 10,000 example queries that
+            maps both your free text and each city&apos;s climate fingerprint
+            into a shared 32-dimensional space, then ranks by how close
+            they sit. Best when the query is pure description — &quot;alpine
+            vibes&quot;, &quot;Mediterranean climate&quot; — with no
+            structured tweak the classical lookup can use.
+          </li>
+        </ul>
+        <p>
+          Auto picks for you. The rule: if we can extract a city or any
+          specific climate adjustment from your text, we use the classical
+          lookup. If we can&apos;t extract anything structured, we fall
+          back to the smart model. We evaluated both rankers across 3,150
+          synthetic queries against a closed-form measure of how well each
+          one moves along the dimensions you asked about — the classical
+          lookup wins decisively whenever the vocabulary covers your
+          intent, which is the common case.
+        </p>
+        <p>
+          You can override the router with the toggle next to the search
+          box, or add <code>?compare=1</code> to the URL to see both
+          rankings side-by-side on every query.
+        </p>
+      </Section>
+
+      <Section title="When you'll see an honest 'no'">
+        <p>
+          The recommender refuses to fake an answer in three cases. Each
+          one shows you a message instead of a ranking that pretends to
+          satisfy your query:
+        </p>
+        <ul className="space-y-2 list-disc pl-5 marker:text-zinc-600">
+          <li>
+            <strong className="text-zinc-200">City not found.</strong>{" "}
+            &quot;Hogwarts but sunny&quot; — we caught &quot;Hogwarts&quot;
+            but couldn&apos;t place it on the map. You get a did-you-mean
+            list rather than a ranking around a fictional anchor.
+          </li>
+          <li>
+            <strong className="text-zinc-200">You contradicted
+            yourself.</strong> &quot;Drier and more humid&quot; pulls in
+            opposite directions on humidity, so any ranking would be
+            unreliable. We tell you which two adjustments contradict and
+            ask you to pick one.
+          </li>
+          <li>
+            <strong className="text-zinc-200">You&apos;re already at the
+            extreme.</strong> &quot;Singapore but more humid&quot; —
+            Singapore is at the top of our humidity scale, so the closest
+            neighbors are slightly <em>less</em> humid than Singapore
+            itself. We surface a &quot;you&apos;re already there&quot;
+            message rather than misleading you with cities that look
+            reasonable but don&apos;t actually satisfy the request.
+          </li>
+        </ul>
+        <p>
+          These guards together reject roughly 5% of queries — the ones
+          where any ranked answer would have been quietly wrong. The other
+          95% benefit from the same evaluation that decided when to surface
+          them.
+        </p>
+      </Section>
+
       <Section title="Reading the similarity score">
         <div className="grid sm:grid-cols-2 gap-x-6 gap-y-2">
           <Scale band="80–90%+" toneClass="text-emerald-400" text="very close climatic twin" />
@@ -123,10 +200,13 @@ export default function AboutPage() {
             first time that city is ever requested.
           </li>
           <li>
-            One modification per query works best. &quot;Warmer winters{" "}
-            <em>and</em> drier summers&quot; parses into two separate
-            adjustments, both applied at full strength — results may
-            over-satisfy one.
+            One modification per query is still the sweet spot. Two-vibe
+            queries (&quot;warmer winters <em>and</em> drier summers&quot;)
+            work — the direction stays right — but each adjustment applies
+            at full strength, so the resulting ranking moves about 10%
+            less in σ-space than a single-vibe query. Outright
+            contradictions (&quot;drier and more humid&quot;) get caught
+            by the conflict guard before they reach the ranker.
           </li>
           <li>
             The dataset covers 2023–2024. It&apos;s current but not a 30-year
