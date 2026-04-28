@@ -306,6 +306,15 @@ function ClassicalResults({
             <span className="text-zinc-500">no vibes extracted</span>
           )}
         </div>
+        {resp.parsed.vibes.some((v) => v.intensity !== "slightly") && (
+          <div className="mt-3 text-xs text-zinc-500">
+            Results feel too extreme? Try replacing{" "}
+            <span className="text-zinc-400">noticeably</span>/
+            <span className="text-zinc-400">much</span> with{" "}
+            <span className="text-zinc-400">slightly</span> in your query
+            (e.g. <em>&quot;slightly warmer&quot;</em>) to soften the push.
+          </div>
+        )}
       </div>
 
       {resp.anchor_error && (
@@ -349,6 +358,7 @@ function ClassicalResults({
               key={c.city}
               rank={i + 1}
               result={c}
+              anchor={resp.anchor}
               expanded={expanded === c.city}
               onToggle={() => setExpanded(expanded === c.city ? null : c.city)}
             />

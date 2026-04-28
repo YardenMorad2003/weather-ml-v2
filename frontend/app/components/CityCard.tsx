@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   getCity,
   getWikiSummary,
+  type Anchor,
   type CityDetail,
   type CityResult,
   type WikiSummary,
@@ -12,11 +13,12 @@ import {
 type Props = {
   rank: number;
   result: CityResult;
+  anchor?: Anchor | null;
   expanded: boolean;
   onToggle: () => void;
 };
 
-export function CityCard({ rank, result, expanded, onToggle }: Props) {
+export function CityCard({ rank, result, anchor, expanded, onToggle }: Props) {
   const [detail, setDetail] = useState<CityDetail | null>(null);
   const [wiki, setWiki] = useState<WikiSummary | null>(null);
   const [loading, setLoading] = useState(false);
@@ -43,23 +45,55 @@ export function CityCard({ rank, result, expanded, onToggle }: Props) {
       const Plotly = (await import("plotly.js-dist-min")).default;
       if (cancelled || !mapRef.current) return;
 
+      // Result marker (rose). Plot the anchor as a second marker (sky blue)
+      // when one is provided AND it's a different city — gives a visual sense
+      // of how far the recommendation is from where the user started.
+      const showAnchor =
+        anchor &&
+        anchor.name.toLowerCase() !== detail.name.toLowerCase();
+      const traces: object[] = [
+        {
+          type: "scattergeo",
+          mode: "markers",
+          lat: [detail.lat],
+          lon: [detail.lon],
+          marker: {
+            size: 10,
+            color: "#f43f5e",
+            line: { color: "#fff", width: 1 },
+          },
+          name: detail.name,
+          text: [detail.name],
+          hoverinfo: "text",
+        },
+      ];
+      if (showAnchor) {
+        traces.push({
+          type: "scattergeo",
+          mode: "markers",
+          lat: [anchor.lat],
+          lon: [anchor.lon],
+          marker: {
+            size: 9,
+            color: "#38bdf8",
+            symbol: "diamond",
+            line: { color: "#fff", width: 1 },
+          },
+          name: `${anchor.name} (anchor)`,
+          text: [`${anchor.name} (anchor)`],
+          hoverinfo: "text",
+        });
+      }
+
       Plotly.newPlot(
         mapRef.current,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        [
-          {
-            type: "scattergeo",
-            mode: "markers",
-            lat: [detail.lat],
-            lon: [detail.lon],
-            marker: { size: 10, color: "#f43f5e", line: { color: "#fff", width: 1 } },
-            hoverinfo: "skip",
-          },
-        ] as any,
+        traces as any,
         {
           height: 220,
           margin: { t: 0, r: 0, b: 0, l: 0 },
           paper_bgcolor: "rgba(0,0,0,0)",
+          showlegend: false,
           geo: {
             projection: { type: "natural earth" },
             showland: true,
@@ -80,7 +114,7 @@ export function CityCard({ rank, result, expanded, onToggle }: Props) {
     return () => {
       cancelled = true;
     };
-  }, [expanded, detail]);
+  }, [expanded, detail, anchor]);
 
   return (
     <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 overflow-hidden transition">
@@ -139,6 +173,26 @@ export function CityCard({ rank, result, expanded, onToggle }: Props) {
 
               <div className="space-y-3">
                 <div ref={mapRef} style={{ width: "100%", height: 220 }} />
+                {anchor &&
+                  detail &&
+                  anchor.name.toLowerCase() !== detail.name.toLowerCase() && (
+                    <div className="flex items-center gap-4 text-[10px] text-zinc-500">
+                      <span className="flex items-center gap-1.5">
+                        <span
+                          className="inline-block w-2 h-2 rounded-full"
+                          style={{ backgroundColor: "#f43f5e" }}
+                        />
+                        {detail.name}
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span
+                          className="inline-block w-2 h-2 rotate-45"
+                          style={{ backgroundColor: "#38bdf8" }}
+                        />
+                        {anchor.name} (your anchor)
+                      </span>
+                    </div>
+                  )}
                 {result.reasons.length > 0 && (
                   <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
                     <div className="flex items-center gap-1.5 mb-2">
