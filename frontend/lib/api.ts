@@ -128,17 +128,55 @@ export type WikiSummary = {
   extract?: string;
 };
 
+// Cities in our canonical 230 whose plain name resolves to a Wikipedia
+// disambiguation page ("Charlotte may refer to: ..."). Maps the canonical
+// name to the actual Wikipedia title so we get the city page on the first
+// shot. Verified against Wikipedia's REST API. Add to this map if a future
+// city addition surfaces a disambig description in the UI.
+const WIKI_TITLE_OVERRIDES: Record<string, string> = {
+  Charlotte: "Charlotte, North Carolina",
+  Phoenix: "Phoenix, Arizona",
+  Portland: "Portland, Oregon",
+  Halifax: "Halifax, Nova Scotia",
+  Cartagena: "Cartagena, Colombia",
+};
+
+async function fetchWikiSummary(title: string): Promise<{
+  thumbnail?: string;
+  extract?: string;
+  type?: string;
+}> {
+  const r = await fetch(
+    `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title)}`
+  );
+  if (!r.ok) return {};
+  const j = await r.json();
+  return {
+    thumbnail: j.thumbnail?.source,
+    extract: j.extract,
+    type: j.type,
+  };
+}
+
 export async function getWikiSummary(name: string): Promise<WikiSummary> {
   try {
-    const r = await fetch(
-      `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(name)}`
-    );
-    if (!r.ok) return {};
-    const j = await r.json();
-    return {
-      thumbnail: j.thumbnail?.source,
-      extract: j.extract,
-    };
+    // Cities with known disambiguation collisions get the qualified title
+    // straight away — saves a round-trip and avoids the disambig blurb
+    // ever flashing on screen.
+    const override = WIKI_TITLE_OVERRIDES[name];
+    if (override) {
+      const j = await fetchWikiSummary(override);
+      return { thumbnail: j.thumbnail, extract: j.extract };
+    }
+
+    const j = await fetchWikiSummary(name);
+    if (j.type === "disambiguation") {
+      // Future-proof: if a new canonical city hits a disambiguation page
+      // that isn't in the override map, drop the description rather than
+      // surfacing the "X may refer to" blurb. Better empty than misleading.
+      return { thumbnail: j.thumbnail };
+    }
+    return { thumbnail: j.thumbnail, extract: j.extract };
   } catch {
     return {};
   }
