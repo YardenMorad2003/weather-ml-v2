@@ -93,6 +93,20 @@ def recommend_from_text(db: Session, text: str, top_k: int = 10) -> RecommendRes
 
     anchor: Optional[ResolvedCity] = None
     if parsed.anchor_city:
+        # Short-circuit fictional anchors before geocoding. The resolver would
+        # otherwise return whatever real obscure place shares the name (e.g.
+        # "Atlantis" → Atlantis, FL pop. 2k), silently treating the user's
+        # mythological reference as a legitimate small-town anchor.
+        if parsed.anchor_is_fictional:
+            return RecommendResponse(
+                parsed=parsed,
+                anchor=None,
+                results=[],
+                anchor_error=AnchorError(
+                    input=parsed.anchor_city,
+                    suggestions=[],
+                ),
+            )
         anchor = resolve(db, parsed.anchor_city, profiles)
         if anchor is None:
             # The user asked for a specific place we can't locate. Don't fall

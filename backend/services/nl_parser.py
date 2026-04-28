@@ -46,14 +46,33 @@ class ParsedQuery(BaseModel):
         default=None,
         description="City name the user referenced as a starting point, if any",
     )
+    anchor_is_fictional: bool = Field(
+        default=False,
+        description=(
+            "True ONLY if anchor_city is a mythological, fictional, or imaginary "
+            "place — e.g. Atlantis, Hogwarts, Camelot, Mordor, Westeros, Wakanda, "
+            "Olympus, Avalon, Shangri-La, Narnia, El Dorado, Eden, Gotham, "
+            "Metropolis (the comic city), Pandora. False for any real-world city, "
+            "including obscure ones, even if a famous fictional place shares the "
+            "name. Set this based on the most famous/canonical referent of the "
+            "name, not whether some real obscure place happens to share it."
+        ),
+    )
     vibes: list[Vibe] = Field(default_factory=list)
 
 
 SYSTEM_PROMPT = f"""You translate short weather/climate wishes into a structured query.
 
 Extract:
-1. anchor_city: if the user names a real city as a starting point, return it. Otherwise null.
-2. vibes: a list of climate modifications.
+1. anchor_city: if the user names a city as a starting point, return it
+   (return the name even if it's fictional — the next field marks it).
+   Otherwise null.
+2. anchor_is_fictional: True if the anchor is a mythological, fictional, or
+   imaginary place (Atlantis, Hogwarts, Camelot, Mordor, Westeros, Wakanda,
+   Olympus, Avalon, Shangri-La, Narnia, El Dorado, Eden, Gotham, Metropolis-
+   the-comic-city, Pandora, etc.). False for any real-world city including
+   obscure ones. Decide based on the most famous referent of the name.
+3. vibes: a list of climate modifications.
 
 Each vibe must use ONLY these values:
 - axis: one of {VIBE_AXES}
