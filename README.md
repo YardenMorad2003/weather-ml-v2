@@ -13,6 +13,16 @@ The live backend runs on Render's free tier and spins down after 15 min of idle,
 
 ---
 
+## Team: Zesty Monkeys
+
+- David Hao (dhh5827@nyu.edu)
+- Vincent Qiu (vq2008@nyu.edu)
+- Simon Ni (zn2133@nyu.edu)
+- Eric Cheng (erc7558@nyu.edu)
+- Yarden Morad (ym2705@nyu.edu)
+
+---
+
 ## What it does
 
 Four tabs:
