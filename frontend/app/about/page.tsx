@@ -61,7 +61,7 @@ export default function AboutPage() {
             mention a city or any specific climate adjustment.
           </li>
           <li>
-            <strong className="text-zinc-200">Smart (Contrastive).</strong>{" "}
+            <strong className="text-zinc-200">Contrastive.</strong>{" "}
             A small neural network trained on 10,000 example queries that
             maps both your free text and each city&apos;s climate fingerprint
             into a shared 32-dimensional space, then ranks by how close

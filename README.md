@@ -9,7 +9,7 @@ The system has **two complementary rankers** and routes between them by query sh
 
 **Live demo:** [yardenmorad2003.github.io/weather-ml-v2](https://yardenmorad2003.github.io/weather-ml-v2/) · side-by-side: [`?compare=1`](https://yardenmorad2003.github.io/weather-ml-v2/?compare=1)
 
-The live backend runs on Render's free tier and spins down after 15 min of idle, so the first request of a session takes 30–60 s. Subsequent queries are ~200–500 ms. Once the contrastive model is cached in IndexedDB (one-time ~13 MB download from HuggingFace on first Smart query), Smart-mode rankings happen entirely client-side with no backend round-trip.
+The live backend runs on Render's free tier and spins down after 15 min of idle, so the first request of a session takes 30–60 s. Subsequent queries are ~200–500 ms. Once the contrastive model is cached in IndexedDB (one-time ~13 MB download from HuggingFace on first Contrastive query), Contrastive-mode rankings happen entirely client-side with no backend round-trip.
 
 ---
 
@@ -27,7 +27,7 @@ The live backend runs on Render's free tier and spins down after 15 min of idle,
 
 Four tabs:
 
-- **Query** — type free text, see the top 10 matching cities, each with a factual breakdown ("Why this matches") and a small map showing the city alongside your anchor (when one was extracted), so the geographic distance is visible at a glance. If the parsed intensity is `noticeably` or `much`, an inline hint suggests softening with `slightly` to dial back over-extreme rankings. A three-way ranker toggle (Auto / Classical / Smart) lets you pick the recommender. **Auto** is the default and routes on what the parser extracted: anchor *or* any structured vibe → classical (the σ-eval shows it wins decisively on vocabulary-covered queries); empty parser output (no anchor, no vibes) → contrastive (queries the vibe vocabulary can't represent). A `?compare=1` URL flag flips into a side-by-side mode that runs both rankers on the same query and highlights cities that appear in both top-10 lists.
+- **Query** — type free text, see the top 10 matching cities, each with a factual breakdown ("Why this matches") and a small map showing the city alongside your anchor (when one was extracted), so the geographic distance is visible at a glance. If the parsed intensity is `noticeably` or `much`, an inline hint suggests softening with `slightly` to dial back over-extreme rankings. A three-way ranker toggle (Auto / Classical / Contrastive) lets you pick the recommender. **Auto** is the default and routes on what the parser extracted: anchor *or* any structured vibe → classical (the σ-eval shows it wins decisively on vocabulary-covered queries); empty parser output (no anchor, no vibes) → contrastive (queries the vibe vocabulary can't represent). A `?compare=1` URL flag flips into a side-by-side mode that runs both rankers on the same query and highlights cities that appear in both top-10 lists.
 - **Explorer** — rotate all 230 canonical cities in a 3D PCA scatter. Axes are auto-labeled by an LLM from their top loadings (e.g. *"Sunny autumn days"*, *"Mild winter temperatures"*, *"Breezy autumn and winter"*). The PCA itself is a from-scratch implementation (covariance → `eigh` → top-k components) — sklearn's `PCA` is no longer a runtime dependency for this tab.
 - **Tournament** — pairwise picks across 10 rounds; the final round shows the implied climate preferences ranked over all cities. Designed as the data source for the planned per-user adapter (Stage 2).
 - **How it works** — an in-app explainer for non-technical users.
@@ -292,7 +292,7 @@ weather-ml-v2/
 │   └── main.py                 # FastAPI app + CORS
 ├── frontend/
 │   ├── app/
-│   │   ├── page.tsx            # Query tab (Auto/Classical/Smart toggle, ?compare=1)
+│   │   ├── page.tsx            # Query tab (Auto/Classical/Contrastive toggle, ?compare=1)
 │   │   ├── explorer/page.tsx   # 3D PCA
 │   │   ├── tournament/page.tsx # pairwise picks
 │   │   ├── about/page.tsx      # How it works
@@ -333,7 +333,7 @@ Ordered by impact-per-effort:
 - Compound queries (2+ vibes) score ≈0.10 lower in σ-cosine than single-vibe — the cost of asking for two things at once. Direction stays right, magnitudes shrink. Truly contradictory pairs (`drier+more_humid`, `wetter+sunnier`) are filtered upfront by the conflict guard.
 - The contrastive ranker treats *"X but Y"* like *"X"* — it learned climate clusters, not anchor-and-tweak. The σ-eval shows it scoring +0.20 mean cosine on anchored 1-vibe queries vs classical's +0.90, so Auto routes any vocabulary-covered query to classical and keeps contrastive for the residual. Use `?compare=1` to see the divergence directly.
 - Free-tier Render cold-starts add 30–60 s on the first request.
-- First Smart-mode query of a session downloads ~13 MB from HuggingFace's CDN (cached forever in IndexedDB after that, even across page reloads). Incognito wipes the cache.
+- First Contrastive-mode query of a session downloads ~13 MB from HuggingFace's CDN (cached forever in IndexedDB after that, even across page reloads). Incognito wipes the cache.
 - 2-year window ≠ climate normal. An anomalously hot 2023 nudges every fingerprint slightly.
 
 ---

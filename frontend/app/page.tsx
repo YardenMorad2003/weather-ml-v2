@@ -141,7 +141,7 @@ export default function QueryPage() {
                     : "text-zinc-400 hover:text-zinc-200"
                 }`}
               >
-                {m === "smart" ? "Smart (Contrastive)" : m}
+                {m === "smart" ? "Contrastive" : m}
               </button>
             ))}
           </div>
