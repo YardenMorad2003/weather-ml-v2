@@ -25,6 +25,31 @@ FEATURE_NAMES = ["temp", "humidity", "dewpoint", "precip", "cloud", "pressure", 
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
+# Static axis labels for the Explorer tab. We hand-write these instead of
+# letting the LLM label each axis run to keep the visualisation deterministic
+# across deploys and to phrase the axes around what the team wants to
+# emphasise (rather than whatever month tokens dominate the loadings).
+STATIC_AXIS_LABELS: tuple[tuple[str, str], tuple[str, str], tuple[str, str]] = (
+    (
+        "Humidity and cloudiness, year-round average",
+        "Cities high on this axis stay cloudy and humid throughout the year — "
+        "places like Singapore, Jakarta, and Hong Kong rank high; arid cities "
+        "like Phoenix and Cairo rank low.",
+    ),
+    (
+        "Temperature and dewpoint (absolute humidity)",
+        "Cities high on this axis are hot with heavy absolute humidity — "
+        "tropical cities like Bangkok and Mumbai rank high; cool, dry cities "
+        "like Reykjavik and Anchorage rank low.",
+    ),
+    (
+        "Wind, temperature, and pressure",
+        "Cities high on this axis combine strong winds with notable "
+        "temperature and pressure variability — exposed coastal cities like "
+        "Wellington and Cape Town rank high; sheltered inland places rank low.",
+    ),
+)
+
 
 @dataclass
 class CityPoint:
@@ -173,9 +198,10 @@ def get_overview() -> PCAOverview:
     pc2_top = _top_loadings(pca.components_[1])
     pc3_top = _top_loadings(pca.components_[2])
 
-    if "axis_labels" not in st:
-        st["axis_labels"] = _label_axes(pc1_top, pc2_top, pc3_top)
-    (pc1_label, pc1_expl), (pc2_label, pc2_expl), (pc3_label, pc3_expl) = st["axis_labels"]
+    # Use the hand-written static labels instead of the LLM-generated ones.
+    # _label_axes() is left in place as a fallback if we ever want dynamic
+    # labels again. See STATIC_AXIS_LABELS for the canonical PC1/PC2/PC3 text.
+    (pc1_label, pc1_expl), (pc2_label, pc2_expl), (pc3_label, pc3_expl) = STATIC_AXIS_LABELS
 
     return PCAOverview(
         cities=cities,
