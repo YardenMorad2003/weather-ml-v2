@@ -174,6 +174,26 @@ export default function AboutPage() {
           of the breakdown: you can sanity-check the ranking against actual
           climate data.
         </p>
+        <p>
+          Each card also shows a small map with two pins: the matched city
+          and your starting city (when you mentioned one). It&apos;s there
+          to make the geographic distance visible at a glance — a 40% match
+          in your own hemisphere often looks more practical than a 50%
+          match on the other side of the globe.
+        </p>
+      </Section>
+
+      <Section title="The Tournament tab">
+        <p>
+          Don&apos;t know what to type? The Tournament tab plays ten rounds of
+          side-by-side picks between two cities — just click the one that
+          sounds nicer. Each pick nudges a running preference toward the
+          climate you keep choosing, and the matches narrow as you go: early
+          rounds show wider contrasts, later rounds show neighbors of your
+          growing taste. After the tenth round, the app reveals the top 10
+          cities that fit your picks, with the same Why this matches cards as
+          the Query tab.
+        </p>
       </Section>
 
       <Section title="The Explorer tab">
